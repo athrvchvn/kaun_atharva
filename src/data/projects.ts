@@ -24,6 +24,8 @@ export interface Project {
   media?: string | null; // base path, no extension: `${media}.mp4` + `${media}.jpg`
   mediaNote?: string;    // caption under the clip — REQUIRED when the media is a
                          // render or concept animation rather than real footage
+  pair?: [string, string]; // two slugs whose images render side by side, for
+                            // minor builds grouped into one beat (e.g. club projects)
 }
 
 export const THREADS: Record<Thread, { label: string; question: string }> = {
@@ -108,11 +110,14 @@ export const projects: Project[] = [
     threads: ['where'],
     note: 'First-year Makerspace course project, IIT Indore.' },
 
-  { slug: 'quadruped', title: 'Quadruped', year: 2025, yearLabel: '2024–25', act: 4,
-    what: 'A four-legged walking robot.', threads: ['where'] },
-
-  { slug: 'robotic-arm', title: 'Robotic arm', year: 2025, yearLabel: '2024–25', act: 4,
-    what: 'A multi-axis manipulator.', threads: [] },
+  // Two minor club builds, shown as one paired beat rather than as two
+  // projects competing for the same weight as the deep ones. `pair` points
+  // ProjectBeat at two images shown side by side instead of a single hero.
+  { slug: 'robotics-club', title: 'Quadruped & robotic arm', year: 2025, yearLabel: '2024–25', act: 4,
+    what: 'A four-legged walking robot and a multi-axis manipulator arm.',
+    threads: ['where'],
+    note: 'Robotics Club projects, IIT Indore.',
+    pair: ['quadruped', 'robotic-arm'] },
 
   { slug: 'esp32-flight-controller', title: 'Custom ESP32 flight controller', year: 2025, yearLabel: '2025', act: 4,
     what: 'A custom flight-controller PCB integrating MPU6050 IMU, magnetometer and optical flow sensor. EKF sensor fusion achieving a 25-minute stable hover in GPS-denied conditions.',

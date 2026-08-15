@@ -4,6 +4,7 @@ import YearRail from '../components/YearRail.astro';
 import ProjectBeat from '../components/ProjectBeat.astro';
 import ActHead from '../components/ActHead.astro';
 import ScrollScrub from '../components/ScrollScrub.astro';
+import MagneticTitle from '../components/MagneticTitle.astro';
 import { projects, byAct, THREADS, type Thread } from '../data/projects';
 import { mediaFor, hasMontage } from '../data/media';
 
@@ -80,7 +81,7 @@ const people = {
       )}
 
       <div class="hero-copy wrap">
-        <h1 class="display">kaun atharva?</h1>
+        <MagneticTitle text="kaun atharva?" />
 
         {!montage && (
           <div class="thesis">
@@ -188,7 +189,6 @@ const people = {
       <div class="wrap">
         <ActHead id="act-2" num="02" years="2022 — 2024" title="the silence" />
         <div class="prose" data-reveal>
-          <p>then i stopped.</p>
           <p>two years. i built nothing.</p>
         </div>
         <div class="prose" data-reveal>
@@ -204,8 +204,7 @@ const people = {
       <div class="wrap">
         <ActHead id="act-3" num="03" years="2024" title="the capacitor" />
         <div class="prose" data-reveal>
-          <p>day three at iit indore. classes had not started.</p>
-          <p>i emailed prof. i.a. palani and asked if i could see his lab. he said yes.</p>
+          <p>at iit indore. i emailed prof. i.a. palani and asked if i could see his lab. he said yes.</p>
           <p>that same day a machine had a faulty capacitor. someone asked if i could replace it.</p>
         </div>
         <div class="prose hinge" data-reveal>
@@ -224,11 +223,12 @@ const people = {
 
     <ScrollScrub id="t-3-4" label="then it got fast" />
 
-    <!-- ══════════ 6. ACT IV — the bulk of the site ══════════ -->
+    <!-- ══════════ 6. ACT IV — the bulk of the site ══════════
+         "then it got fast" is already the passage caption right above (t-3-4).
+         Repeating it here just padded the scroll — cut. -->
     <section class="act" id="act-4">
       <div class="wrap">
         <ActHead id="act-4" num="04" years="2024 — 2026" title="it leaves the building" />
-        <div class="prose" data-reveal><p>then it got fast.</p></div>
       </div>
 
       <div class="wrap beats">

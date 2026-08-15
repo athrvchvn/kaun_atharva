@@ -1,0 +1,79 @@
+---
+// The hero question, reactive to the cursor: letters near the pointer flare
+// to brass and scramble briefly before settling back. The mechanic is
+// borrowed from a reference Atharva sent — the copy and palette are not.
+// Real text stays in the DOM (aria-label on the wrapper) so nothing is lost
+// to screen readers or to JS failing to load.
+interface Props { text: string }
+const { text } = Astro.props;
+const chars = [...text];
+---
+
+<h1 class="display magnetic" aria-label={text} data-magnetic>
+  {chars.map((c) => (
+    c === ' '
+      ? <span class="ch sp" aria-hidden="true"> </span>
+      : <span class="ch" aria-hidden="true">{c}</span>
+  ))}
+</h1>
+
+<style>
+  .magnetic { cursor: default; }
+  .ch {
+    display: inline-block;
+    transition: color 0.25s var(--ease);
+  }
+  .ch.sp { width: 0.32em; }
+  .ch.near { color: var(--brass); }
+</style>
+
+<script>
+  const SCRAMBLE = 'ATHARVA01?/·—kaunχβδ'.split('');
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FINE = matchMedia('(pointer: fine)').matches;
+
+  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+    if (REDUCED || !FINE) return; // static text stands on its own — nothing lost
+
+    const chars = [...el.querySelectorAll<HTMLElement>('.ch:not(.sp)')];
+    const originals = chars.map((c) => c.textContent ?? '');
+    const RADIUS = 90; // px — how far a letter reacts from the cursor
+    const scrambling = new Set<number>();
+
+    const scramble = (i: number) => {
+      if (scrambling.has(i)) return;
+      scrambling.add(i);
+      const el = chars[i];
+      let n = 0;
+      const id = setInterval(() => {
+        el.textContent = SCRAMBLE[Math.floor(Math.random() * SCRAMBLE.length)];
+        if (++n > 2) {
+          clearInterval(id);
+          el.textContent = originals[i];
+          scrambling.delete(i);
+        }
+      }, 45);
+    };
+
+    let raf = 0;
+    const onMove = (e: PointerEvent) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        chars.forEach((c, i) => {
+          const r = c.getBoundingClientRect();
+          const dx = e.clientX - (r.left + r.width / 2);
+          const dy = e.clientY - (r.top + r.height / 2);
+          const near = dx * dx + dy * dy < RADIUS * RADIUS;
+          c.classList.toggle('near', near);
+          if (near) scramble(i);
+        });
+      });
+    };
+
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerleave', () => {
+      chars.forEach((c, i) => { c.classList.remove('near'); c.textContent = originals[i]; });
+    });
+  });
+</script>

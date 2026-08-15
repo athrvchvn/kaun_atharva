@@ -54,6 +54,17 @@ export function hasMontage(): boolean {
   }
 }
 
+/** Images for two minor builds shown side by side in one beat, instead of each
+ *  claiming a full screen of its own. Falls back gracefully if only one landed. */
+export function pairMedia(slugs: [string, string]): { slug: string; src: string }[] {
+  return slugs
+    .map((slug) => {
+      const m = mediaFor(slug);
+      return m ? { slug, src: m.kind === 'video' ? m.poster || m.src : m.src } : null;
+    })
+    .filter((x): x is { slug: string; src: string } => x !== null);
+}
+
 /** Extra stills for a project: <slug>-1.jpg, <slug>-2.jpg … */
 export function stillsFor(slug: string): string[] {
   const out: string[] = [];

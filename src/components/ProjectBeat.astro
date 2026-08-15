@@ -4,25 +4,37 @@
 // which was a résumé with borders.
 import type { Project } from '../data/projects';
 import { THREADS } from '../data/projects';
-import { mediaFor, stillsFor } from '../data/media';
+import { mediaFor, stillsFor, pairMedia } from '../data/media';
 
 interface Props { project: Project; index: number }
 const { project: p, index } = Astro.props;
 const flip = index % 2 === 1;          // alternate sides so the scroll has rhythm
-const media = mediaFor(p.slug);
-const stills = stillsFor(p.slug);      // two shown, the rest behind "explore"
+const media = p.pair ? null : mediaFor(p.slug);
+const stills = p.pair ? [] : stillsFor(p.slug);  // two shown, the rest behind "explore"
+const pair = p.pair ? pairMedia(p.pair) : [];
 
 // One project per screen — but weight is editorial, not uniform. A project with
 // footage, a written page or a real outcome earns the full viewport; a one-line
 // entry gets half. Same feeling where it matters, ~a third off the page length,
-// and the pacing itself signals which work is significant.
-const major = Boolean(media) || Boolean(p.deep) || Boolean(p.outcome);
+// and the pacing itself signals which work is significant. A paired beat (minor
+// club builds shown two-up) stays half-height even with images — the point of
+// pairing them is that neither is important enough alone for the full screen.
+const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome));
 ---
 
 <article class:list={['beat', { flip, major }]} id={`p-${p.slug}`}>
   <div class="beat-media">
     <div class="sticky">
-      {media?.kind === 'video' && (
+      {p.pair && (
+        <div class="pair" data-count={pair.length}>
+          {pair.length > 0 ? pair.map((m) => (
+            <img src={m.src} alt={`${m.slug} — part of ${p.title}`} loading="lazy" decoding="async" />
+          )) : (
+            <div class="empty" aria-hidden="true"><span class="mono">no footage yet</span></div>
+          )}
+        </div>
+      )}
+      {!p.pair && media?.kind === 'video' && (
         <video
           src={media.src}
           poster={media.poster || undefined}
@@ -31,10 +43,10 @@ const major = Boolean(media) || Boolean(p.deep) || Boolean(p.outcome);
           aria-label={`${p.title} — ${p.what}`}
         ></video>
       )}
-      {media?.kind === 'image' && (
+      {!p.pair && media?.kind === 'image' && (
         <img src={media.src} alt={`${p.title} — ${p.what}`} loading="lazy" decoding="async" />
       )}
-      {!media && <div class="empty" aria-hidden="true"><span class="mono">no footage yet</span></div>}
+      {!p.pair && !media && <div class="empty" aria-hidden="true"><span class="mono">no footage yet</span></div>}
       {p.mediaNote && <p class="medianote mono">{p.mediaNote}</p>}
 
       {stills.length > 0 && (
@@ -118,6 +130,23 @@ const major = Boolean(media) || Boolean(p.deep) || Boolean(p.outcome);
     background:
       repeating-linear-gradient(45deg, transparent 0 11px, rgba(255,255,255,0.014) 11px 22px),
       var(--ink-1);
+  }
+
+  /* two minor builds, side by side, same frame the single-media slot would use */
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    aspect-ratio: 16 / 10;
+    max-height: 68svh;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+  }
+  .pair img { width: 100%; height: 100%; object-fit: cover; background: var(--ink-1); }
+  .pair[data-count="1"] { grid-template-columns: 1fr; }
+  .pair .empty { aspect-ratio: auto; }
+  @media (max-width: 55.99rem) {
+    .pair { max-height: 42svh; }
   }
   .medianote { padding-top: 0.6rem; color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
 
