@@ -1,0 +1,158 @@
+---
+// The chronology IS the navigation. No navbar — a fixed menu would fight the
+// one thing this page is doing.
+//
+// The rail is spaced by TIME, not evenly: the 2019→2022 jump renders as a long
+// empty run, so the two silent years are visible in the navigation before the
+// visitor ever reaches them. Structure encoding content.
+const stops = [
+  { id: 'act-0', year: '2018', label: 'the workshops', gapAfter: 1 },
+  { id: 'act-1', year: '2019', label: 'electronics',   gapAfter: 7 },
+  { id: 'act-2', year: '2022', label: 'the silence',   gapAfter: 2 },
+  { id: 'act-3', year: '2024', label: 'the capacitor', gapAfter: 1 },
+  { id: 'act-4', year: '2025', label: 'it ships',      gapAfter: 1 },
+  { id: 'act-5', year: '2026', label: 'now',           gapAfter: 0 },
+];
+---
+
+<nav class="rail" aria-label="Timeline">
+  <ol>
+    {stops.map((s) => (
+      <li style={`--gap:${s.gapAfter}`}>
+        <a href={`#${s.id}`} data-rail={s.id}>
+          <span class="yr">{s.year}</span>
+          <span class="lb">{s.label}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<div class="progress" aria-hidden="true"><i></i></div>
+
+<style>
+  .rail {
+    position: fixed;
+    left: clamp(1rem, 2.5vw, 2.25rem);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    display: none;
+  }
+  @media (min-width: 62rem) and (min-height: 40rem) {
+    .rail { display: block; }
+  }
+
+  .rail ol { list-style: none; margin: 0; padding: 0; }
+
+  /* the gap is the point: --gap scales the empty run between stops */
+  .rail li { padding-bottom: calc(var(--gap) * 0.85rem); position: relative; }
+  .rail li::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 1.35em;
+    width: 1px;
+    height: calc(100% - 1.1em);
+    background: linear-gradient(var(--hairline), var(--hairline) 55%, transparent);
+  }
+  .rail li:last-child::after { display: none; }
+
+  .rail a {
+    display: grid;
+    grid-template-columns: 7px auto;
+    align-items: baseline;
+    gap: 0 0.75rem;
+    padding: 0.15rem 0;
+    color: var(--steel-dim);
+    transition: color 0.35s var(--ease);
+  }
+  .rail a::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--hairline-2);
+    transition: background 0.35s var(--ease), transform 0.35s var(--ease);
+  }
+  .rail .yr {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    grid-column: 2;
+  }
+  .rail .lb {
+    grid-column: 2;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+  }
+
+  .rail a:hover,
+  .rail a.is-active { color: var(--bone); }
+  .rail a:hover::before,
+  .rail a.is-active::before { background: var(--brass); transform: scale(1.25); }
+  .rail a:hover .lb,
+  .rail a.is-active .lb { opacity: 1; transform: none; }
+
+  /* mobile: the rail collapses to a hairline progress bar */
+  .progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: transparent;
+    z-index: 40;
+  }
+  .progress i {
+    display: block;
+    height: 100%;
+    width: var(--p, 0%);
+    background: var(--brass);
+    opacity: 0.85;
+  }
+  @media (min-width: 62rem) and (min-height: 40rem) {
+    .progress { display: none; }
+  }
+</style>
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-rail]')];
+  const targets = links
+    .map((a) => document.getElementById(a.dataset.rail!))
+    .filter((el): el is HTMLElement => !!el);
+
+  if (targets.length) {
+    const spy = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          links.forEach((a) => a.classList.toggle('is-active', a.dataset.rail === e.target.id));
+        }
+      },
+      { rootMargin: '-45% 0px -45% 0px' }
+    );
+    targets.forEach((t) => spy.observe(t));
+  }
+
+  const bar = document.querySelector<HTMLElement>('.progress');
+  if (bar) {
+    let ticking = false;
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const p = max > 0 ? (window.scrollY / max) * 100 : 0;
+      bar.style.setProperty('--p', `${p}%`);
+      ticking = false;
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true }
+    );
+    update();
+  }
+</script>

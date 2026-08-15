@@ -1,0 +1,165 @@
+---
+import Base from '../../layouts/Base.astro';
+import { projects, THREADS } from '../../data/projects';
+import { mediaFor, stillsFor } from '../../data/media';
+
+// Deep write-ups live as markdown in src/content/work/<slug>.md so they can be
+// edited without touching any code. Adding a new one = drop in a file.
+const pages = import.meta.glob('../../content/work/*.md', { eager: true }) as Record<
+  string,
+  { Content: any; frontmatter: Record<string, any> }
+>;
+
+export async function getStaticPaths() {
+  const { projects } = await import('../../data/projects');
+  return projects.filter((p) => p.deep).map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const project = projects.find((p) => p.slug === slug)!;
+const entry = Object.entries(pages).find(([path]) => path.endsWith(`/${slug}.md`))?.[1];
+const Content = entry?.Content;
+
+const idx = projects.filter((p) => p.deep).findIndex((p) => p.slug === slug);
+const deep = projects.filter((p) => p.deep);
+const next = deep[(idx + 1) % deep.length];
+
+const media = mediaFor(project.slug);
+const stills = stillsFor(project.slug);
+---
+
+<Base title={`${project.title} — kaun atharva?`} description={project.what}>
+  <main id="main" class="wrap page">
+    <a class="back mono" href="/work">← the work</a>
+
+    <header class="head">
+      <span class="mono yr">{project.yearLabel}</span>
+      <h1 class="display">{project.title}</h1>
+      <p class="lead">{project.what}</p>
+
+      <ul class="meta">
+        {project.outcome && <li class="out">{project.outcome}</li>}
+        {project.threads.map((t) => <li class="mono">{THREADS[t].label}</li>)}
+      </ul>
+
+      {project.note && <p class="note">{project.note}</p>}
+    </header>
+
+    {media && (
+      <figure class="hero-media">
+        {media.kind === 'video' ? (
+          <video src={media.src} poster={media.poster || undefined}
+                 muted loop playsinline preload="none" data-autoplay
+                 aria-label={`${project.title} — ${project.what}`}></video>
+        ) : (
+          <img src={media.src} alt={`${project.title} — ${project.what}`} />
+        )}
+        {project.mediaNote && <figcaption class="mono">{project.mediaNote}</figcaption>}
+      </figure>
+    )}
+
+    {stills.length > 0 && (
+      <div class="gallery" data-gallery={JSON.stringify(stills)}>
+        {stills.map((s, i) => (
+          <button data-index={i} aria-label={`Photo ${i + 1} of ${stills.length}`}>
+            <img src={s} alt="" loading="lazy" decoding="async" />
+          </button>
+        ))}
+      </div>
+    )}
+
+    {Content ? (
+      <article class="prose long"><Content /></article>
+    ) : (
+      <p class="pending mono">the write-up for this one is still being written.</p>
+    )}
+
+    <nav class="next">
+      <a href={`/work/${next.slug}`}>
+        <span class="mono">next</span>
+        <span class="display">{next.title} →</span>
+      </a>
+    </nav>
+  </main>
+</Base>
+
+<style>
+  .page { padding-block: clamp(2.5rem, 8vh, 5rem) 6rem; max-width: 52rem; }
+  .back { color: var(--steel); }
+  .back:hover { color: var(--brass); }
+
+  .head { margin: 2.5rem 0 3rem; display: grid; gap: 1rem; }
+  .head .yr { color: var(--brass); }
+  .head h1 { font-size: var(--t-act); }
+
+  .meta { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .meta li {
+    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.25rem 0.55rem;
+    border: 1px solid var(--hairline-2); color: var(--steel);
+  }
+  .meta .out { color: var(--brass); border-color: var(--brass); }
+
+  .note {
+    font-size: var(--t-small); color: var(--bone-dim);
+    border-left: 2px solid var(--brass); padding-left: 1rem;
+  }
+
+  .hero-media { margin: 0 0 2rem; }
+  .hero-media video, .hero-media img {
+    width: 100%; aspect-ratio: 16 / 9; object-fit: contain;
+    background: var(--ink-1); border: 1px solid var(--hairline);
+  }
+  .hero-media figcaption {
+    padding-top: 0.7rem; color: var(--steel-dim);
+    text-transform: none; letter-spacing: 0.02em;
+  }
+
+  .gallery {
+    display: grid; gap: 0.5rem; margin-bottom: 3rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr));
+  }
+  .gallery button {
+    padding: 0; border: 1px solid var(--hairline); background: var(--ink-1);
+    cursor: pointer; line-height: 0; overflow: hidden;
+    transition: border-color 0.2s var(--ease);
+  }
+  .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: opacity 0.2s var(--ease); }
+  .gallery button:hover { border-color: var(--brass); }
+  .gallery button:hover img { opacity: 0.82; }
+
+  .long { max-width: 38rem; }
+  .long :global(h2) {
+    font-family: var(--display); font-weight: 700; font-size: 1.25rem;
+    letter-spacing: -0.01em; margin: 2.75rem 0 0.85rem;
+  }
+  .long :global(p) { margin-bottom: 1.1em; }
+  .long :global(ul) { margin: 0 0 1.25em 1.1rem; display: grid; gap: 0.4rem; }
+  .long :global(li) { color: var(--bone-dim); }
+  .long :global(strong) { color: var(--bone); font-weight: 700; }
+  .long :global(code) {
+    font-family: var(--mono); font-size: 0.875em;
+    background: var(--ink-1); border: 1px solid var(--hairline);
+    padding: 0.1em 0.35em;
+  }
+  .long :global(hr) { border: 0; border-top: 1px solid var(--hairline); margin: 2.5rem 0; }
+  .long :global(figure.vid) { margin: 2rem 0 2.5rem; }
+  .long :global(figure.vid video) {
+    width: 100%; background: var(--ink-1); border: 1px solid var(--hairline);
+  }
+  .long :global(figure.vid figcaption) {
+    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--steel-dim); padding-top: 0.7rem;
+  }
+  .long :global(blockquote) {
+    border-left: 2px solid var(--hairline-2); padding-left: 1rem;
+    color: var(--steel); font-style: italic; margin-bottom: 1.25em;
+  }
+
+  .pending { color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
+
+  .next { margin-top: 5rem; border-top: 1px solid var(--hairline); padding-top: 2rem; }
+  .next a { display: grid; gap: 0.4rem; }
+  .next .display { font-size: 1.35rem; }
+  .next a:hover .display { color: var(--brass); }
+</style>

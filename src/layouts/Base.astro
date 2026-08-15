@@ -1,0 +1,164 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'kaun atharva?',
+  description = 'Atharva Chavan. Ten years of building machines that work out where they are — from an ultrasonic sensor on a dustbin lid to UWB navigation without GPS.',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://kaunatharva.com');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- only the three faces used above the fold get preloaded -->
+    <link rel="preload" href="/fonts/BricolageGrotesque-Bold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/InstrumentSans-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/GeistMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0a0c0e" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">skip to content</a>
+    <slot />
+
+    <!-- gallery overlay: one instance, driven by any [data-gallery] group -->
+    <div id="lb" hidden>
+      <button id="lb-close" aria-label="Close">✕</button>
+      <button id="lb-prev" aria-label="Previous">‹</button>
+      <img id="lb-img" alt="" />
+      <button id="lb-next" aria-label="Next">›</button>
+      <p id="lb-count" class="mono"></p>
+    </div>
+
+    <style>
+      #lb {
+        position: fixed; inset: 0; z-index: 90;
+        background: rgba(6, 8, 9, 0.94);
+        display: grid; place-items: center;
+        padding: clamp(1rem, 5vw, 4rem);
+      }
+      #lb[hidden] { display: none; }
+      #lb-img {
+        max-width: min(100%, 84rem); max-height: 82vh;
+        object-fit: contain; border: 1px solid var(--hairline);
+      }
+      #lb button {
+        position: absolute; background: transparent; border: 0; cursor: pointer;
+        color: var(--bone-dim); font-size: 2rem; line-height: 1; padding: 0.75rem;
+      }
+      #lb button:hover { color: var(--brass); }
+      #lb-close { top: 1rem; right: 1.25rem; font-size: 1.25rem; }
+      #lb-prev { left: 0.5rem; }
+      #lb-next { right: 0.5rem; }
+      #lb-count { position: absolute; bottom: 1.25rem; color: var(--steel); }
+    </style>
+
+    <script>
+      const lb = document.getElementById('lb')!;
+      const img = document.getElementById('lb-img') as HTMLImageElement;
+      const count = document.getElementById('lb-count')!;
+      let set: string[] = [];
+      let at = 0;
+      let opener: HTMLElement | null = null;
+
+      const draw = () => {
+        img.src = set[at];
+        count.textContent = `${at + 1} / ${set.length}`;
+      };
+      const open = (items: string[], i: number, from: HTMLElement) => {
+        set = items; at = i; opener = from;
+        lb.hidden = false;
+        document.body.style.overflow = 'hidden';
+        draw();
+        (document.getElementById('lb-close') as HTMLButtonElement).focus();
+      };
+      const close = () => {
+        lb.hidden = true;
+        document.body.style.overflow = '';
+        opener?.focus();
+      };
+      const step = (d: number) => { at = (at + d + set.length) % set.length; draw(); };
+
+      document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((group) => {
+        let items: string[] = [];
+        try { items = JSON.parse(group.dataset.gallery!); } catch { return; }
+        group.querySelectorAll<HTMLButtonElement>('button[data-index]').forEach((b) =>
+          b.addEventListener('click', () => open(items, Number(b.dataset.index) || 0, b))
+        );
+      });
+
+      document.getElementById('lb-close')!.addEventListener('click', close);
+      document.getElementById('lb-prev')!.addEventListener('click', () => step(-1));
+      document.getElementById('lb-next')!.addEventListener('click', () => step(1));
+      lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+      addEventListener('keydown', (e) => {
+        if (lb.hidden) return;
+        if (e.key === 'Escape') close();
+        if (e.key === 'ArrowLeft') step(-1);
+        if (e.key === 'ArrowRight') step(1);
+      });
+    </script>
+
+    <script>
+      // Scroll reveal. IntersectionObserver only — no library, no layout thrash.
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-in');
+              io.unobserve(e.target);
+            }
+          }
+        },
+        { rootMargin: '0px 0px -12% 0px', threshold: 0.05 }
+      );
+      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+      // Project clips play only while on screen. preload="none" means nothing
+      // downloads until a visitor actually scrolls near it, so a page of 25
+      // videos still costs almost nothing on arrival.
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const vids = document.querySelectorAll<HTMLVideoElement>('video[data-autoplay]');
+      if (vids.length && !still) {
+        const vio = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              const v = e.target as HTMLVideoElement;
+              if (e.isIntersecting) {
+                if (v.preload === 'none') v.preload = 'auto';
+                v.play().catch(() => {});
+              } else {
+                v.pause();
+              }
+            }
+          },
+          { threshold: 0.4 }
+        );
+        vids.forEach((v) => vio.observe(v));
+      } else {
+        // reduced motion: show the poster, give the visitor controls instead
+        vids.forEach((v) => (v.controls = true));
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,506 @@
+---
+import Base from '../layouts/Base.astro';
+import YearRail from '../components/YearRail.astro';
+import ProjectBeat from '../components/ProjectBeat.astro';
+import ActHead from '../components/ActHead.astro';
+import ScrollScrub from '../components/ScrollScrub.astro';
+import { projects, byAct, THREADS, type Thread } from '../data/projects';
+import { mediaFor, hasMontage } from '../data/media';
+
+const montage = hasMontage();
+
+const act = (n: number) => projects.filter((p) => p.act === n);
+
+const childhood = act(1);
+const dustbin = childhood.find((p) => p.slug === 'smart-dustbin');
+const dustbinMedia = dustbin ? mediaFor(dustbin.slug) : null;
+const otherChildhood = childhood
+  .filter((p) => p.slug !== 'smart-dustbin')
+  .map((p) => ({ ...p, m: mediaFor(p.slug) }));
+
+// ---- the pattern plot -----------------------------------------------------
+const Y0 = 2018, Y1 = 2026;
+const X = (y: number) => 60 + ((y - Y0) / (Y1 - Y0)) * 880;
+const LANES: { key: Thread; y: number }[] = [
+  { key: 'where', y: 58 }, { key: 'unplugged', y: 132 }, { key: 'ships', y: 206 },
+];
+const lanes = LANES.map((l) => {
+  const byYear = new Map<number, typeof projects>();
+  for (const p of projects.filter((q) => q.threads.includes(l.key))) {
+    byYear.set(p.year, [...(byYear.get(p.year) ?? []), p]);
+  }
+  const pts: { x: number; title: string; year: string }[] = [];
+  for (const [year, list] of byYear) {
+    const base = X(year);
+    list.forEach((p, i) =>
+      pts.push({ x: base + (i - (list.length - 1) / 2) * 11, title: p.title, year: p.yearLabel })
+    );
+  }
+  pts.sort((a, b) => a.x - b.x);
+  return { ...l, pts, from: pts[0]?.x ?? 0, to: pts[pts.length - 1]?.x ?? 0 };
+});
+
+const people = {
+  'the first door': [['Harshit Chandak', 'childhood friend — showed him electronics']],
+  family: [['His father', 'the furniture workshop'], ['His mama', 'the garage, and the welding']],
+  professors: [
+    ['Prof. I.A. Palani', 'Mechatronics Lab, IIT Indore'],
+    ['Prof. Ashish Dutta', 'Centre for Mechatronics, IIT Kanpur'],
+    ['Prof. Abhirup Datta', 'STARC Lab / Dean R&D, IIT Indore'],
+  ],
+  'mentors & seniors': [
+    ['Adersh M', 'IIT Kanpur'], ['Rajat Vishwakarma', 'IIT Indore'],
+    ['Hrishikesh Jawale', 'IIT Indore'], ['Anand Nambiar', 'IIT Indore'],
+    ['Tejas Bhavekar', 'IIT Indore'],
+  ],
+  'the mechatronics lab': [
+    ['Diksha Jaurker', 'PhD, Mechatronics Lab'],
+    ['Anshu Sahu', 'now Professor, SRM University'],
+    ['Arpit Singh', 'now postdoc, Dalhousie University'],
+  ],
+};
+---
+
+<Base>
+  <YearRail />
+
+  <main id="main">
+    <!-- ══════════ 1. THE MONTAGE ══════════
+         Atharva's call, and the right one: the work goes first. -->
+    <section class:list={['hero', { bare: !montage }]}>
+      {montage && (
+        <div class="reel">
+          <video
+            src="/media/montage.mp4" poster="/media/montage.jpg"
+            muted loop playsinline preload="metadata" autoplay
+            aria-label="Ten years of projects, cut together"
+          ></video>
+          <div class="reel-veil" aria-hidden="true"></div>
+        </div>
+      )}
+
+      <div class="hero-copy wrap">
+        <h1 class="display">kaun atharva?</h1>
+
+        {!montage && (
+          <div class="thesis">
+            <!-- the site's argument, as two readings ten years apart -->
+            <dl>
+              <div class="then">
+                <dt class="mono">2018 · ultrasonic sensor, dustbin lid</dt>
+                <dd class="display">≈ 24 cm</dd>
+              </div>
+              <div class="arrow mono" aria-hidden="true">
+                <span>ten years</span>
+                <i></i>
+              </div>
+              <div class="now">
+                <dt class="mono">2026 · uwb + imu + odometry, fused</dt>
+                <dd class="display">&lt; 7 cm</dd>
+              </div>
+            </dl>
+          </div>
+        )}
+
+        <p class="mono cue">↓ ten years, in order</p>
+      </div>
+    </section>
+
+    <!-- ══════════ 2. ACT 0 — THE WORKSHOPS ══════════ HINGE -->
+    <section class="act tight" id="act-0">
+      <div class="wrap">
+        <ActHead id="act-0" num="00" years="2018" title="the workshops" />
+        <div class="prose hinge" data-reveal>
+          <p>my father owns a furniture workshop. i went there to learn, and got fast enough to be useful to him.</p>
+          <p>my mama has a garage. that is where the metal was, and the welding.</p>
+        </div>
+        <div class="prose" data-reveal>
+          <p>at 12 i wanted an office chair. my father would not buy me one. so i pulled a broken one out of scrap and welded it back together.</p>
+          <p class="beat-line">it broke a few months later.</p>
+          <p>at 13 he was fitting out a house. i built the study table for it.</p>
+        </div>
+        <p class="aside mono" data-reveal>no photograph of either one survives</p>
+      </div>
+    </section>
+
+    <ScrollScrub id="t-0-1" label="and then someone showed me electronics" />
+
+    <!-- ══════════ 3. ACT I — CHILDHOOD, COMPRESSED ══════════
+         Deliberately tight. A decade of real work should outweigh this. -->
+    <section class="act tight" id="act-1">
+      <div class="wrap">
+        <ActHead id="act-1" num="01" years="2018 — 2022" title="and then the sky" />
+
+        <div class="prose hinge" data-reveal>
+          <p>harshit chandak showed me electronics. we are still friends.</p>
+        </div>
+        <div class="prose" data-reveal>
+          <p>i watched videos and tried to copy them with the parts i had, which was never the parts they had.</p>
+        </div>
+
+        {dustbin && (
+          <figure class="first" data-reveal>
+            {dustbinMedia?.kind === 'video' && (
+              <video src={dustbinMedia.src} poster={dustbinMedia.poster || undefined}
+                     muted loop playsinline preload="none" data-autoplay
+                     aria-label="The smart dustbin, 2018"></video>
+            )}
+            {dustbinMedia?.kind === 'image' && (
+              <img src={dustbinMedia.src} alt="The smart dustbin, 2018" loading="lazy" />
+            )}
+            {!dustbinMedia && <div class="empty"><span class="mono">footage pending</span></div>}
+            <figcaption>
+              <span class="mono">2018 · age 11 · the first one</span>
+              <p>an ultrasonic sensor, a servo, and a dustbin lid.</p>
+              <span class="mono meas">distance ≈ 24 cm</span>
+            </figcaption>
+          </figure>
+        )}
+
+        <ul class="tiles" data-reveal>
+          {otherChildhood.map((p) => (
+            <li>
+              {p.m?.kind === 'video' && (
+                <video src={p.m.src} poster={p.m.poster || undefined}
+                       muted loop playsinline preload="none" data-autoplay
+                       aria-label={p.title}></video>
+              )}
+              {p.m?.kind === 'image' && <img src={p.m.src} alt={p.title} loading="lazy" />}
+              {!p.m && <div class="empty sm"></div>}
+              <span class="mono">{p.yearLabel}</span>
+              <h3>{p.title}</h3>
+              {p.problem && <p class="tile-note">{p.problem}</p>}
+            </li>
+          ))}
+        </ul>
+
+        <div class="prose" data-reveal>
+          <p><span class="mono inline">2021</span> a school bag that redistributes its own load. inspire award manak, government of india. ₹10,000.</p>
+          <p class="beat-line">my parents were there.</p>
+        </div>
+      </div>
+    </section>
+
+    <ScrollScrub id="t-1-2" label="then i stopped" />
+
+    <!-- ══════════ 4. ACT II — THE SILENCE ══════════ -->
+    <section class="act silence" id="act-2">
+      <div class="wrap">
+        <ActHead id="act-2" num="02" years="2022 — 2024" title="the silence" />
+        <div class="prose" data-reveal>
+          <p>then i stopped.</p>
+          <p>two years. i built nothing.</p>
+        </div>
+        <div class="prose" data-reveal>
+          <p class="dim">my preference list had mechanical and electrical on it. nothing else.</p>
+        </div>
+      </div>
+    </section>
+
+    <ScrollScrub id="t-2-3" label="day three. classes had not started." />
+
+    <!-- ══════════ 5. ACT III — THE CAPACITOR ══════════ HINGE -->
+    <section class="act" id="act-3">
+      <div class="wrap">
+        <ActHead id="act-3" num="03" years="2024" title="the capacitor" />
+        <div class="prose" data-reveal>
+          <p>day three at iit indore. classes had not started.</p>
+          <p>i emailed prof. i.a. palani and asked if i could see his lab. he said yes.</p>
+          <p>that same day a machine had a faulty capacitor. someone asked if i could replace it.</p>
+        </div>
+        <div class="prose hinge" data-reveal>
+          <p>i could. i had been doing that kind of work since i was twelve.</p>
+          <p class="beat-line">i have had a key to that lab ever since.</p>
+        </div>
+        <div class="prose" data-reveal>
+          <p class="dim">24/7 access. a place to sit. we still go to dinners together.</p>
+        </div>
+      </div>
+
+      <div class="wrap beats">
+          {act(3).map((p, i) => <ProjectBeat project={p} index={i} />)}
+      </div>
+    </section>
+
+    <ScrollScrub id="t-3-4" label="then it got fast" />
+
+    <!-- ══════════ 6. ACT IV — the bulk of the site ══════════ -->
+    <section class="act" id="act-4">
+      <div class="wrap">
+        <ActHead id="act-4" num="04" years="2024 — 2026" title="it leaves the building" />
+        <div class="prose" data-reveal><p>then it got fast.</p></div>
+      </div>
+
+      <div class="wrap beats">
+        {act(4).map((p, i) => <ProjectBeat project={p} index={i} />)}
+      </div>
+    </section>
+
+    <ScrollScrub id="t-4-5" label="and now" />
+
+    <!-- ══════════ 7. ACT V — THE OPEN QUESTION ══════════ -->
+    <section class="act" id="act-5">
+      <div class="wrap">
+        <ActHead id="act-5" num="05" years="now" title="the open question" />
+      </div>
+
+      <div class="wrap beats">
+        {act(5).map((p, i) => <ProjectBeat project={p} index={i} />)}
+      </div>
+
+      <div class="wrap closing">
+        <div class="prose" data-reveal>
+          <p>right now: aqualoop, the machine management system, and a rover that can land a drone on itself and find its own way, all on uwb.</p>
+          <p class="beat-line">that last one is not working yet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 8. THE PATTERN ══════════ -->
+    <section class="act pattern" id="pattern">
+      <div class="wrap">
+        <header class="act-head" data-reveal>
+          <span class="mono">all {projects.length}</span>
+          <h2 class="display">every project, 2018 to now</h2>
+        </header>
+        <div class="plot" data-reveal>
+          <svg viewBox="0 0 1000 268" role="img"
+               aria-label="Every project plotted 2018 to 2026 across three threads. The 'where am I?' thread runs the entire length.">
+            {[2018, 2020, 2022, 2024, 2026].map((y) => (
+              <g>
+                <line x1={X(y)} y1="18" x2={X(y)} y2="248" stroke="var(--hairline)" stroke-width="1" />
+                <text x={X(y)} y="264" class="ax" text-anchor="middle">{y}</text>
+              </g>
+            ))}
+            {lanes.map((l, li) => (
+              <g>
+                <line class="lane-line" style={`--i:${li}; --len:${Math.max(1, l.to - l.from)}`}
+                      x1={l.from} y1={l.y} x2={l.to} y2={l.y}
+                      stroke={l.key === 'where' ? 'var(--brass)' : 'var(--hairline-2)'}
+                      stroke-width={l.key === 'where' ? '2' : '1'} />
+                <text x="60" y={l.y - 16} class="lane">{THREADS[l.key].label}</text>
+                {l.pts.map((pt, pi) => (
+                  <circle class="dot" style={`--i:${li}; --p:${pi}`}
+                          cx={pt.x} cy={l.y} r={l.key === 'where' ? 5 : 4}
+                          fill={l.key === 'where' ? 'var(--brass)' : 'var(--steel)'}>
+                    <title>{pt.year} — {pt.title}</title>
+                  </circle>
+                ))}
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div class="ends" data-reveal>
+          <div>
+            <span class="mono">2018 · ultrasonic sensor, dustbin lid</span>
+            <p class="meas-big display">≈ 24 cm</p>
+          </div>
+          <div>
+            <span class="mono">2026 · uwb + imu + odometry, fused</span>
+            <p class="meas-big display">&lt; 7 cm</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 9. THE PEOPLE — the credits roll ══════════ -->
+    <section class="act people" id="people">
+      <div class="wrap">
+        <header class="act-head" data-reveal>
+          <span class="mono">credits</span>
+          <h2 class="display">the people</h2>
+        </header>
+        <p class="prose hinge" data-reveal>none of it was only me.</p>
+        <div class="credits">
+          {Object.entries(people).map(([group, list]) => (
+            <div class="credit-group" data-reveal>
+              <h3 class="mono">{group}</h3>
+              <ul>
+                {list.map(([name, role]) => (
+                  <li><span class="nm">{name}</span><span class="rl cold">{role}</span></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 10. CONTACT ══════════ -->
+    <footer class="act contact" id="contact">
+      <div class="wrap">
+        <h2 class="display" data-reveal>atharva chavan</h2>
+        <p class="prose dim" data-reveal>mechanical engineering, iit indore.</p>
+        <ul class="links" data-reveal>
+          <li><a href="mailto:atharvachavan346@gmail.com">atharvachavan346@gmail.com</a></li>
+          <li><a href="https://github.com/athrvchvn" rel="me noopener">github</a></li>
+          <li><a href="https://linkedin.com/in/athrvchvan" rel="me noopener">linkedin</a></li>
+          <li><a href="/work">all the work →</a></li>
+        </ul>
+      </div>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  /* ---------- the montage ---------- */
+  .hero { position: relative; min-height: 100svh; display: grid; align-items: end; overflow: hidden; }
+  .reel { position: absolute; inset: 0; }
+  .reel video { width: 100%; height: 100%; object-fit: cover; }
+  .reel-veil {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10,12,14,.55) 0%, rgba(10,12,14,.2) 40%, rgba(10,12,14,.96) 100%);
+  }
+  .hero-copy { position: relative; padding-bottom: clamp(3rem, 12vh, 8rem); display: grid; gap: 1.25rem; }
+  .hero-copy h1 { font-size: var(--t-hero); }
+  .cue { color: var(--bone-dim); }
+
+  /* ---------- hero without the montage ----------
+     Not a placeholder: the thesis stated as two measurements, which is the
+     whole argument of the site. Upgrades to video the moment one exists. */
+  .hero.bare { align-items: center; }
+  .hero.bare .hero-copy { padding-bottom: 0; gap: clamp(2rem, 6vh, 3.5rem); }
+
+  .thesis { display: grid; gap: clamp(1.5rem, 4vh, 2.5rem); }
+  /* the same question, ten years apart. the 2018 reading is deliberately
+     quieter and smaller — the progression is the point, not the pair. */
+  .thesis dl {
+    display: flex; flex-wrap: wrap; align-items: end;
+    gap: clamp(1rem, 3vw, 2.5rem);
+  }
+  .thesis dl > div { display: grid; gap: 0.5rem; }
+  .thesis dd { line-height: 1; }
+  .then dd { font-size: clamp(1.6rem, 3.4vw, 2.3rem); color: var(--bone-dim); }
+  .then dt { color: var(--steel-dim); }
+  .now dd  { font-size: clamp(2.4rem, 6.4vw, 4rem); color: var(--brass); }
+
+  .arrow { display: flex; align-items: center; gap: 0.6rem; padding-bottom: 0.55rem; color: var(--steel-dim); }
+  .arrow i {
+    display: block; width: clamp(2rem, 6vw, 5rem); height: 1px;
+    background: linear-gradient(90deg, var(--hairline-2), var(--brass));
+    position: relative;
+  }
+  .arrow i::after {
+    content: ''; position: absolute; right: 0; top: -2px;
+    border-left: 5px solid var(--brass);
+    border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent;
+  }
+  @media (max-width: 34rem) { .arrow { display: none; } }
+
+  /* ---------- acts ---------- */
+  .act-head { margin-bottom: clamp(2rem, 5vh, 3.5rem); display: grid; gap: 0.6rem; }
+  .act-head h2 { font-size: var(--t-act); }
+  .act .prose + .prose { margin-top: 2rem; }
+  .beat-line { color: var(--bone); }
+  .aside { margin-top: 2.5rem; color: var(--steel-dim); }
+  .inline { display: inline; text-transform: none; margin-right: 0.4rem; color: var(--brass); }
+  .tight { padding-block: clamp(4rem, 11vh, 7rem); }
+  .silence { padding-block: clamp(10rem, 34vh, 20rem); }
+  .silence .prose p { font-size: var(--t-lead); }
+
+  @media (min-width: 62rem) {
+    /* :not(.beats) — the project beats are a .wrap child too, and without this
+       they become grid items in the sidebar layout and land in the 16rem column */
+    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) {
+      display: grid;
+      grid-template-columns: 16rem minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+      align-items: start;
+    }
+    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) > * { grid-column: 2; }
+    /* must match child-for-child: Astro appends [data-astro-cid] to every
+       compound, so a shorter descendant selector loses the cascade. */
+    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) > .act-head {
+      grid-column: 1; grid-row: 1 / -1;
+      position: sticky; top: 22vh; margin-bottom: 0; align-self: start;
+    }
+    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) > .act-head h2 {
+      font-size: clamp(1.5rem, 2.1vw, 1.95rem);
+      overflow-wrap: break-word; text-wrap: balance;
+    }
+  }
+
+  /* ---------- the first one ---------- */
+  .first { margin-top: 2.5rem; max-width: 42rem; }
+  .first video, .first img, .first .empty {
+    width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+    background: var(--ink-1); border: 1px solid var(--hairline);
+  }
+  .empty {
+    display: grid; place-items: center;
+    background: repeating-linear-gradient(45deg, transparent 0 11px, rgba(255,255,255,.014) 11px 22px), var(--ink-1);
+  }
+  .empty.sm { aspect-ratio: 4 / 3; }
+  .first figcaption { padding-top: 0.9rem; display: grid; gap: 0.35rem; }
+  .first figcaption p { font-size: var(--t-lead); }
+  .meas { color: var(--brass); }
+
+  /* ---------- childhood tiles: alive, but compact ---------- */
+  .tiles {
+    list-style: none; padding: 0; margin: 2.5rem 0 0;
+    display: grid; gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  }
+  .tiles li { display: grid; gap: 0.35rem; align-content: start; }
+  /* `contain`, not `cover`: this footage is a mix of portrait phone video and
+     landscape, and at tile size a crop silently eats the subject. Letterboxing
+     is invisible against --ink-1 anyway. */
+  .tiles video, .tiles img, .tiles .empty {
+    width: 100%; aspect-ratio: 1 / 1; object-fit: contain;
+    background: var(--ink-1); border: 1px solid var(--hairline);
+  }
+  .tiles h3 { font-size: var(--t-small); font-weight: 400; color: var(--bone); line-height: 1.3; }
+  .tile-note { font-size: var(--t-micro); color: var(--bone-dim); font-style: italic; line-height: 1.45; }
+
+  /* ---------- pattern ---------- */
+  .plot { overflow-x: auto; }
+  .plot svg { min-width: 40rem; }
+
+  /* The plot draws itself as you arrive: the three threads extend left to
+     right, then their projects land. "where am i?" goes first and longest,
+     because it is the one that runs the whole decade. */
+  .plot .lane-line {
+    stroke-dasharray: var(--len);
+    stroke-dashoffset: var(--len);
+  }
+  .plot.is-in .lane-line {
+    animation: draw 1.4s var(--ease) forwards;
+    animation-delay: calc(var(--i) * 0.22s);
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  .plot .dot { opacity: 0; }
+  .plot.is-in .dot {
+    animation: land 0.45s var(--ease) forwards;
+    animation-delay: calc(0.5s + var(--i) * 0.22s + var(--p) * 0.05s);
+  }
+  @keyframes land {
+    from { opacity: 0; transform: scale(0.2); transform-box: fill-box; transform-origin: center; }
+    to   { opacity: 1; transform: scale(1);   transform-box: fill-box; transform-origin: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plot .lane-line { stroke-dashoffset: 0; }
+    .plot .dot { opacity: 1; }
+    .plot.is-in .lane-line, .plot.is-in .dot { animation: none; }
+  }
+  .ax { font-family: var(--mono); font-size: 11px; fill: var(--steel-dim); }
+  .lane { font-family: var(--mono); font-size: 11px; fill: var(--steel); letter-spacing: .08em; text-transform: uppercase; }
+  .ends { display: grid; gap: 2rem; margin-top: 3.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  .ends > div { display: grid; gap: 0.5rem; }
+  .meas-big { font-size: clamp(2rem, 6vw, 3.25rem); color: var(--brass); }
+
+  /* ---------- credits ---------- */
+  .credits { margin-top: 3rem; display: grid; gap: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+  .credit-group h3 { margin-bottom: 1rem; }
+  .credit-group ul { list-style: none; padding: 0; display: grid; gap: 0.85rem; }
+  .credit-group li { display: grid; gap: 0.15rem; }
+  .rl { font-size: var(--t-small); }
+
+  /* ---------- contact ---------- */
+  .contact { border-top: 1px solid var(--hairline); padding-bottom: 6rem; }
+  .contact h2 { font-size: var(--t-act); margin-bottom: 0.5rem; }
+  .links { list-style: none; padding: 0; margin-top: 2.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; }
+  .links a { border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
+  .links a:hover { color: var(--brass); border-color: var(--brass); }
+</style>

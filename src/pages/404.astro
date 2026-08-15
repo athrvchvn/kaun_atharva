@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="not here — kaun atharva?" description="This page does not exist.">
+  <main id="main" class="wrap nf">
+    <p class="mono">404</p>
+    <h1 class="display">this one doesn&rsquo;t exist</h1>
+    <p class="lead dim">
+      which, in a decade of building things, has happened before.
+    </p>
+    <ul class="links">
+      <li><a href="/">the story</a></li>
+      <li><a href="/work">the work</a></li>
+    </ul>
+  </main>
+</Base>
+
+<style>
+  .nf {
+    min-height: 78svh;
+    display: grid;
+    align-content: center;
+    gap: 1.1rem;
+    padding-block: 6rem;
+  }
+  .nf .mono { color: var(--brass); }
+  .nf h1 { font-size: var(--t-act); }
+  .links { list-style: none; padding: 0; margin-top: 1.5rem; display: flex; gap: 2rem; }
+  .links a { border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
+  .links a:hover { color: var(--brass); border-color: var(--brass); }
+</style>

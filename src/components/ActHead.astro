@@ -1,0 +1,64 @@
+---
+// The act's sticky left column: number, years, title — and beneath them a tall
+// vertical backdrop that gives the act its own atmosphere.
+//
+// That column was dead space running the full height of every act. The backdrop
+// is narrow and off to the side, so it can carry mood without ever competing
+// with the copy it sits beside.
+//
+// Drop site/public/media/bg/<id>.mp4 and it appears. Act II has none on purpose.
+import { backdropFor } from '../data/media';
+
+interface Props {
+  id: string;        // act-0 … act-5, pattern, people
+  num: string;       // "04"
+  years: string;     // "2024 — 2026"
+  title: string;
+}
+const { id, num, years, title } = Astro.props;
+const bg = backdropFor(id);
+---
+
+<header class="act-head" data-reveal>
+  <span class="mono">{num} · {years}</span>
+  <h2 class="display">{title}</h2>
+
+  {bg && (
+    <div class="backdrop" aria-hidden="true">
+      <video src={bg.src} poster={bg.poster || undefined}
+             muted loop playsinline preload="none" data-autoplay></video>
+      <span class="fade"></span>
+    </div>
+  )}
+</header>
+
+<style>
+  .backdrop {
+    position: relative;
+    margin-top: 1.75rem;
+    display: none;                 /* desktop only — the column doesn't exist on mobile */
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+    line-height: 0;
+  }
+  @media (min-width: 62rem) { .backdrop { display: block; } }
+
+  .backdrop video {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+    opacity: 0.55;                 /* it is atmosphere, not content */
+    filter: saturate(0.8);
+  }
+
+  /* the strip dissolves downward so it reads as texture rather than a panel */
+  .fade {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(10,12,14,0) 0%,
+      rgba(10,12,14,0.15) 55%,
+      var(--ink) 100%
+    );
+  }
+</style>

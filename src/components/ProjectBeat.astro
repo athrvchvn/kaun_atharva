@@ -1,0 +1,162 @@
+---
+// One project = one beat in the scroll. Video sticks to one side and plays only
+// while it is on screen; the text moves past it. This replaces the card grid,
+// which was a résumé with borders.
+import type { Project } from '../data/projects';
+import { THREADS } from '../data/projects';
+import { mediaFor, stillsFor } from '../data/media';
+
+interface Props { project: Project; index: number }
+const { project: p, index } = Astro.props;
+const flip = index % 2 === 1;          // alternate sides so the scroll has rhythm
+const media = mediaFor(p.slug);
+const stills = stillsFor(p.slug);      // two shown, the rest behind "explore"
+
+// One project per screen — but weight is editorial, not uniform. A project with
+// footage, a written page or a real outcome earns the full viewport; a one-line
+// entry gets half. Same feeling where it matters, ~a third off the page length,
+// and the pacing itself signals which work is significant.
+const major = Boolean(media) || Boolean(p.deep) || Boolean(p.outcome);
+---
+
+<article class:list={['beat', { flip, major }]} id={`p-${p.slug}`}>
+  <div class="beat-media">
+    <div class="sticky">
+      {media?.kind === 'video' && (
+        <video
+          src={media.src}
+          poster={media.poster || undefined}
+          muted loop playsinline preload="none"
+          data-autoplay
+          aria-label={`${p.title} — ${p.what}`}
+        ></video>
+      )}
+      {media?.kind === 'image' && (
+        <img src={media.src} alt={`${p.title} — ${p.what}`} loading="lazy" decoding="async" />
+      )}
+      {!media && <div class="empty" aria-hidden="true"><span class="mono">no footage yet</span></div>}
+      {p.mediaNote && <p class="medianote mono">{p.mediaNote}</p>}
+
+      {stills.length > 0 && (
+        <div class="stills" data-gallery={JSON.stringify(stills)}>
+          {stills.slice(0, 2).map((s, i) => (
+            <button class="thumb" data-index={i} aria-label={`${p.title}, photo ${i + 1} of ${stills.length}`}>
+              <img src={s} alt="" loading="lazy" decoding="async" />
+            </button>
+          ))}
+          <button class="explore" data-index="0">
+            explore<span class="ct mono">{stills.length}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <div class="beat-text">
+    <span class="mono yr">{p.yearLabel}</span>
+    <h3 class="display">
+      {p.deep ? <a href={`/work/${p.slug}`}>{p.title} <span class="arrow">→</span></a> : p.title}
+    </h3>
+    {p.problem && <p class="problem">{p.problem}</p>}
+    <p class="what">{p.what}</p>
+    {p.note && <p class="note mono">{p.note}</p>}
+    <ul class="tags">
+      {p.outcome && <li class={`out out-${p.outcome}`}>{p.outcome}</li>}
+      {p.threads.map((t) => <li class="mono th">{THREADS[t].label}</li>)}
+    </ul>
+  </div>
+</article>
+
+<style>
+  /* one project to a screen. free scroll, no snap — landing cleanly is the
+     visitor's business, not the page's. */
+  .beat {
+    display: grid;
+    gap: 1.5rem;
+    align-content: center;
+    padding-block: clamp(2.5rem, 7vh, 5rem);
+    border-top: 1px solid var(--hairline);
+    min-height: 62svh;
+  }
+  .beat.major { min-height: 100svh; }
+
+  @media (min-width: 56rem) {
+    .beat {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: center;
+    }
+    /* the wide column has to follow the media across the flip. `order` alone
+       moves the items but leaves the track sizes put, which silently parked
+       every alternating clip in the narrow column. */
+    .beat.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); }
+    .beat.flip .beat-media { order: 2; }
+    .beat.flip .beat-text  { order: 1; }
+  }
+
+  .beat-media video,
+  .beat-media img,
+  .empty {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    max-height: 68svh;
+    /* `contain`, not `cover`: the archive mixes landscape and portrait phone
+       video, and a 16:10 crop silently eats the subject of the vertical ones —
+       the cobot clip loses both the arm and the glove. Bars are invisible
+       against --ink-1 anyway. */
+    object-fit: contain;
+    background: var(--ink-1);
+    border: 1px solid var(--hairline);
+  }
+  /* on a phone the media and the words share one screen, so the clip yields */
+  @media (max-width: 55.99rem) {
+    .beat-media video, .beat-media img, .empty { max-height: 42svh; }
+  }
+  .empty {
+    display: grid;
+    place-items: center;
+    background:
+      repeating-linear-gradient(45deg, transparent 0 11px, rgba(255,255,255,0.014) 11px 22px),
+      var(--ink-1);
+  }
+  .medianote { padding-top: 0.6rem; color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
+
+  /* two stills sit under the clip; everything else lives behind "explore" */
+  .stills { display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: stretch; }
+  .thumb {
+    flex: 1 1 0; min-width: 0; padding: 0; border: 1px solid var(--hairline);
+    background: var(--ink-1); cursor: pointer; overflow: hidden; line-height: 0;
+    transition: border-color 0.2s var(--ease);
+  }
+  .thumb img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: opacity 0.2s var(--ease); }
+  .thumb:hover { border-color: var(--brass); }
+  .thumb:hover img { opacity: 0.82; }
+  .explore {
+    flex: 0 0 auto; font: inherit; font-size: var(--t-micro);
+    font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--hairline); color: var(--bone-dim);
+    padding: 0 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.45rem;
+    transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+  }
+  .explore:hover { color: var(--brass); border-color: var(--brass); }
+  .explore .ct { color: var(--steel-dim); }
+
+  .beat-text { display: grid; gap: 0.7rem; align-content: start; }
+  .yr { color: var(--brass); }
+  .beat-text h3 { font-size: clamp(1.3rem, 2.6vw, 1.9rem); }
+  .beat-text h3 a { border-bottom: 1px solid var(--hairline-2); }
+  .beat-text h3 a:hover { color: var(--brass); border-color: var(--brass); }
+  .arrow { color: var(--brass); }
+  .problem { color: var(--bone); font-style: italic; font-size: var(--t-lead); line-height: 1.45; }
+  .what { color: var(--bone-dim); font-size: var(--t-small); line-height: 1.65; max-width: 34rem; }
+  .note { text-transform: none; letter-spacing: 0.02em; color: var(--steel-dim); line-height: 1.55; }
+
+  .tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+  .tags li {
+    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.2rem 0.5rem;
+    border: 1px solid var(--hairline-2); color: var(--steel);
+  }
+  .out { color: var(--brass) !important; border-color: var(--brass) !important; }
+  .out-failed, .out-abandoned { color: var(--steel) !important; border-style: dashed; border-color: var(--hairline-2) !important; }
+</style>

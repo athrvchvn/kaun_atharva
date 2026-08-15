@@ -1,0 +1,159 @@
+---
+import Base from '../../layouts/Base.astro';
+import { projects, THREADS, type Thread } from '../../data/projects';
+import { mediaFor } from '../../data/media';
+
+const sorted = [...projects].sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
+const threadKeys = Object.keys(THREADS) as Thread[];
+
+const OUTCOME_LABEL: Record<string, string> = {
+  sold: 'sold', deployed: 'deployed', award: 'award', patent: 'patent',
+  published: 'published', failed: 'failed', abandoned: 'abandoned',
+};
+---
+
+<Base
+  title="the work — kaun atharva?"
+  description="Every project Atharva Chavan has built, 2018 to now. Including the ones that failed."
+>
+  <main id="main" class="wrap page">
+    <header class="head">
+      <a class="back mono" href="/">← the story</a>
+      <h1 class="display">the work</h1>
+      <p class="lead dim">
+        everything, in order, from a dustbin lid at eleven to a rover that does not know where it is yet.
+        the ones that failed are in here too.
+      </p>
+    </header>
+
+    <div class="filters" role="group" aria-label="Filter by thread">
+      <button class="chip is-on" data-filter="all" aria-pressed="true">
+        all <span class="ct mono">{projects.length}</span>
+      </button>
+      {threadKeys.map((k) => (
+        <button class="chip" data-filter={k} aria-pressed="false">
+          {THREADS[k].label}
+          <span class="ct mono">{projects.filter((p) => p.threads.includes(k)).length}</span>
+        </button>
+      ))}
+    </div>
+
+    <ol class="list">
+      {sorted.map((p) => (
+        <li class="row" data-threads={p.threads.join(' ')}>
+          <span class="yr mono">{p.yearLabel}</span>
+          <div class="thumb">
+            {(() => {
+              const m = mediaFor(p.slug);
+              if (!m) return <div class="thumb-empty" aria-hidden="true"></div>;
+              const src = m.kind === 'video' ? (m.poster || '') : m.src;
+              return src
+                ? <img src={src} alt="" loading="lazy" decoding="async" />
+                : <div class="thumb-empty" aria-hidden="true"></div>;
+            })()}
+          </div>
+          <div class="body">
+            <h2>
+              {p.deep
+                ? <a href={`/work/${p.slug}`}>{p.title} <span class="arrow">→</span></a>
+                : p.title}
+            </h2>
+            {p.problem && <p class="problem">{p.problem}</p>}
+            <p class="what cold">{p.what}</p>
+            {p.note && <p class="note mono">{p.note}</p>}
+          </div>
+          <div class="tags">
+            {p.outcome && <span class={`out out-${p.outcome}`}>{OUTCOME_LABEL[p.outcome]}</span>}
+            {p.threads.map((t) => <span class="th mono">{THREADS[t].label}</span>)}
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <p class="foot mono">
+      {projects.filter((p) => !p.deep).length} of these do not have their own page yet.
+      they are being written.
+    </p>
+  </main>
+</Base>
+
+<style>
+  .page { padding-block: clamp(3rem, 10vh, 6rem) 6rem; }
+  .head { margin-bottom: 3rem; display: grid; gap: 1rem; max-width: 46rem; }
+  .back { color: var(--steel); }
+  .back:hover { color: var(--brass); }
+  .head h1 { font-size: var(--t-act); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2.5rem; }
+  .chip {
+    font: inherit; font-size: var(--t-small); color: var(--bone-dim);
+    background: transparent; border: 1px solid var(--hairline);
+    padding: 0.45rem 0.85rem; cursor: pointer; display: flex; gap: 0.5rem; align-items: center;
+    transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+  }
+  .chip:hover { color: var(--bone); border-color: var(--hairline-2); }
+  .chip.is-on { color: var(--ink); background: var(--brass); border-color: var(--brass); }
+  .chip.is-on .ct { color: var(--ink); opacity: 0.7; }
+  .ct { color: var(--steel-dim); }
+
+  .list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--hairline); }
+  .row {
+    display: grid; gap: 0.5rem 1.5rem; padding: 1.6rem 0;
+    border-bottom: 1px solid var(--hairline);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 48rem) {
+    .row { grid-template-columns: 5.5rem 7rem minmax(0, 1fr) 10rem; align-items: start; }
+  }
+  .thumb { line-height: 0; }
+  .thumb img, .thumb-empty {
+    width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+    border: 1px solid var(--hairline); background: var(--ink-1);
+  }
+  .thumb-empty {
+    background: repeating-linear-gradient(45deg, transparent 0 7px, rgba(255,255,255,.02) 7px 14px), var(--ink-1);
+  }
+  @media (max-width: 47.99rem) { .thumb { max-width: 9rem; } }
+  .row[hidden] { display: none; }
+  .yr { color: var(--steel-dim); padding-top: 0.25rem; }
+  .body { display: grid; gap: 0.4rem; }
+  .body h2 { font-family: var(--display); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+  .body h2 a { border-bottom: 1px solid var(--hairline-2); }
+  .body h2 a:hover { color: var(--brass); border-color: var(--brass); }
+  .arrow { color: var(--brass); }
+  .problem { color: var(--bone); font-style: italic; }
+  .what { font-size: var(--t-small); line-height: 1.6; }
+  .note { text-transform: none; letter-spacing: 0.02em; color: var(--steel-dim); line-height: 1.5; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; align-content: start; }
+  .out {
+    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.2rem 0.5rem; border: 1px solid var(--hairline-2);
+    color: var(--bone-dim);
+  }
+  .out-sold, .out-deployed, .out-award { color: var(--brass); border-color: var(--brass); }
+  .out-failed, .out-abandoned { color: var(--steel); border-style: dashed; }
+  .th { color: var(--steel-dim); padding: 0.2rem 0; }
+
+  .foot { margin-top: 2.5rem; color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
+</style>
+
+<script>
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+  const rows = [...document.querySelectorAll<HTMLElement>('.row')];
+
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      const f = chip.dataset.filter!;
+      chips.forEach((c) => {
+        const on = c === chip;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', String(on));
+      });
+      rows.forEach((r) => {
+        const show = f === 'all' || (r.dataset.threads ?? '').split(' ').includes(f);
+        r.hidden = !show;
+      });
+    })
+  );
+</script>
