@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { projects, THREADS } from '../../data/projects';
+import { projects } from '../../data/projects';
 import { mediaFor, stillsFor } from '../../data/media';
 
 // Deep write-ups live as markdown in src/content/work/<slug>.md so they can be
@@ -37,12 +37,13 @@ const stills = stillsFor(project.slug);
       <h1 class="display">{project.title}</h1>
       <p class="lead">{project.what}</p>
 
-      <ul class="meta">
-        {project.outcome && <li class="out">{project.outcome}</li>}
-        {project.threads.map((t) => <li class="mono">{THREADS[t].label}</li>)}
-      </ul>
-
       {project.note && <p class="note">{project.note}</p>}
+
+      {project.doc && (
+        <p class="doc">
+          <a href={project.doc.href} target="_blank" rel="noopener">{project.doc.label} ↗</a>
+        </p>
+      )}
     </header>
 
     {media && (
@@ -92,6 +93,9 @@ const stills = stillsFor(project.slug);
   .head .yr { color: var(--brass); }
   .head h1 { font-size: var(--t-act); }
 
+  .doc { font-size: var(--t-small); }
+  .doc a { color: var(--bone-dim); border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
+  .doc a:hover { color: var(--brass); border-color: var(--brass); }
   .meta { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .meta li {
     font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;

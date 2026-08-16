@@ -1,9 +1,16 @@
 ---
 // The hero question, reactive to the cursor: letters near the pointer flare
-// to brass and scramble briefly before settling back. The mechanic is
+// to brass, flicker once through nearby letters, and settle. Mechanic is
 // borrowed from a reference Atharva sent — the copy and palette are not.
+//
 // Real text stays in the DOM (aria-label on the wrapper) so nothing is lost
 // to screen readers or to JS failing to load.
+//
+// Font-size lives HERE, not in the parent page: Astro scopes <style> blocks
+// per-file, matching only elements declared in that same file. A rule like
+// `.hero-copy h1 { font-size: ... }` written in the page will silently stop
+// matching once the h1 moves into a child component — this bit us once
+// already (see the CSS-cascade note history for this project).
 interface Props { text: string }
 const { text } = Astro.props;
 const chars = [...text];
@@ -18,17 +25,24 @@ const chars = [...text];
 </h1>
 
 <style>
-  .magnetic { cursor: default; }
+  .magnetic {
+    font-size: var(--t-hero);
+    cursor: default;
+  }
   .ch {
     display: inline-block;
-    transition: color 0.25s var(--ease);
+    /* fixed advance width regardless of which glyph is showing, so a
+       mid-flicker character never nudges its neighbours and can't feed
+       back into the next proximity read */
+    width: 1ch;
+    text-align: center;
+    transition: color 0.3s var(--ease);
   }
   .ch.sp { width: 0.32em; }
   .ch.near { color: var(--brass); }
 </style>
 
 <script>
-  const SCRAMBLE = 'ATHARVA01?/·—kaunχβδ'.split('');
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const FINE = matchMedia('(pointer: fine)').matches;
 
@@ -37,22 +51,27 @@ const chars = [...text];
 
     const chars = [...el.querySelectorAll<HTMLElement>('.ch:not(.sp)')];
     const originals = chars.map((c) => c.textContent ?? '');
-    const RADIUS = 90; // px — how far a letter reacts from the cursor
-    const scrambling = new Set<number>();
+    const pool = originals.filter((c) => /[a-z]/i.test(c)); // flicker through real
+    const RADIUS = 70;                                       // letters from the word itself
 
-    const scramble = (i: number) => {
-      if (scrambling.has(i)) return;
-      scrambling.add(i);
-      const el = chars[i];
+    // Positions are captured ONCE — after the real font has swapped in, so
+    // metrics are final — and only recomputed on resize. Never read live
+    // during a mousemove: that was the feedback loop that made scrambled
+    // (differently-shaped, previously variable-width) glyphs shift their own
+    // neighbours, which then falsely registered as "near" on the next frame,
+    // cascading into the whole word flickering instead of just the letters
+    // under the cursor.
+    let rects: DOMRect[] = [];
+    const measure = () => { rects = chars.map((c) => c.getBoundingClientRect()); };
+
+    let wasNear: boolean[] = chars.map(() => false);
+    const flicker = (i: number) => {
+      const c = chars[i];
       let n = 0;
       const id = setInterval(() => {
-        el.textContent = SCRAMBLE[Math.floor(Math.random() * SCRAMBLE.length)];
-        if (++n > 2) {
-          clearInterval(id);
-          el.textContent = originals[i];
-          scrambling.delete(i);
-        }
-      }, 45);
+        c.textContent = pool[Math.floor(Math.random() * pool.length)] ?? originals[i];
+        if (++n > 1) { clearInterval(id); c.textContent = originals[i]; }
+      }, 55);
     };
 
     let raf = 0;
@@ -61,19 +80,26 @@ const chars = [...text];
       raf = requestAnimationFrame(() => {
         raf = 0;
         chars.forEach((c, i) => {
-          const r = c.getBoundingClientRect();
+          const r = rects[i];
+          if (!r) return;
           const dx = e.clientX - (r.left + r.width / 2);
           const dy = e.clientY - (r.top + r.height / 2);
           const near = dx * dx + dy * dy < RADIUS * RADIUS;
           c.classList.toggle('near', near);
-          if (near) scramble(i);
+          // fire once on entry, not on every frame spent hovering
+          if (near && !wasNear[i]) flicker(i);
+          wasNear[i] = near;
         });
       });
     };
 
+    document.fonts.ready.then(measure);
+    addEventListener('resize', measure, { passive: true });
+
     el.addEventListener('pointermove', onMove);
     el.addEventListener('pointerleave', () => {
       chars.forEach((c, i) => { c.classList.remove('near'); c.textContent = originals[i]; });
+      wasNear = chars.map(() => false);
     });
   });
 </script>

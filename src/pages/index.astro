@@ -5,7 +5,7 @@ import ProjectBeat from '../components/ProjectBeat.astro';
 import ActHead from '../components/ActHead.astro';
 import ScrollScrub from '../components/ScrollScrub.astro';
 import MagneticTitle from '../components/MagneticTitle.astro';
-import { projects, byAct, THREADS, type Thread } from '../data/projects';
+import { projects } from '../data/projects';
 import { mediaFor, hasMontage } from '../data/media';
 
 const montage = hasMontage();
@@ -18,28 +18,6 @@ const dustbinMedia = dustbin ? mediaFor(dustbin.slug) : null;
 const otherChildhood = childhood
   .filter((p) => p.slug !== 'smart-dustbin')
   .map((p) => ({ ...p, m: mediaFor(p.slug) }));
-
-// ---- the pattern plot -----------------------------------------------------
-const Y0 = 2018, Y1 = 2026;
-const X = (y: number) => 60 + ((y - Y0) / (Y1 - Y0)) * 880;
-const LANES: { key: Thread; y: number }[] = [
-  { key: 'where', y: 58 }, { key: 'unplugged', y: 132 }, { key: 'ships', y: 206 },
-];
-const lanes = LANES.map((l) => {
-  const byYear = new Map<number, typeof projects>();
-  for (const p of projects.filter((q) => q.threads.includes(l.key))) {
-    byYear.set(p.year, [...(byYear.get(p.year) ?? []), p]);
-  }
-  const pts: { x: number; title: string; year: string }[] = [];
-  for (const [year, list] of byYear) {
-    const base = X(year);
-    list.forEach((p, i) =>
-      pts.push({ x: base + (i - (list.length - 1) / 2) * 11, title: p.title, year: p.yearLabel })
-    );
-  }
-  pts.sort((a, b) => a.x - b.x);
-  return { ...l, pts, from: pts[0]?.x ?? 0, to: pts[pts.length - 1]?.x ?? 0 };
-});
 
 const people = {
   'the first door': [['Harshit Chandak', 'childhood friend — showed him electronics']],
@@ -253,73 +231,30 @@ const people = {
       </div>
     </section>
 
-    <!-- ══════════ 8. THE PATTERN ══════════ -->
-    <section class="act pattern" id="pattern">
-      <div class="wrap">
-        <header class="act-head" data-reveal>
-          <span class="mono">all {projects.length}</span>
-          <h2 class="display">every project, 2018 to now</h2>
-        </header>
-        <div class="plot" data-reveal>
-          <svg viewBox="0 0 1000 268" role="img"
-               aria-label="Every project plotted 2018 to 2026 across three threads. The 'where am I?' thread runs the entire length.">
-            {[2018, 2020, 2022, 2024, 2026].map((y) => (
-              <g>
-                <line x1={X(y)} y1="18" x2={X(y)} y2="248" stroke="var(--hairline)" stroke-width="1" />
-                <text x={X(y)} y="264" class="ax" text-anchor="middle">{y}</text>
-              </g>
-            ))}
-            {lanes.map((l, li) => (
-              <g>
-                <line class="lane-line" style={`--i:${li}; --len:${Math.max(1, l.to - l.from)}`}
-                      x1={l.from} y1={l.y} x2={l.to} y2={l.y}
-                      stroke={l.key === 'where' ? 'var(--brass)' : 'var(--hairline-2)'}
-                      stroke-width={l.key === 'where' ? '2' : '1'} />
-                <text x="60" y={l.y - 16} class="lane">{THREADS[l.key].label}</text>
-                {l.pts.map((pt, pi) => (
-                  <circle class="dot" style={`--i:${li}; --p:${pi}`}
-                          cx={pt.x} cy={l.y} r={l.key === 'where' ? 5 : 4}
-                          fill={l.key === 'where' ? 'var(--brass)' : 'var(--steel)'}>
-                    <title>{pt.year} — {pt.title}</title>
-                  </circle>
-                ))}
-              </g>
-            ))}
-          </svg>
-        </div>
-        <div class="ends" data-reveal>
-          <div>
-            <span class="mono">2018 · ultrasonic sensor, dustbin lid</span>
-            <p class="meas-big display">≈ 24 cm</p>
-          </div>
-          <div>
-            <span class="mono">2026 · uwb + imu + odometry, fused</span>
-            <p class="meas-big display">&lt; 7 cm</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════ 9. THE PEOPLE — the credits roll ══════════ -->
+    <!-- ══════════ 9. THE PEOPLE ══════════
+         Folded away by default. The gratitude is real, but fifteen names is a
+         lot of mandatory scroll for someone who came to see the work — so it
+         opens for whoever actually wants it. -->
     <section class="act people" id="people">
       <div class="wrap">
-        <header class="act-head" data-reveal>
-          <span class="mono">credits</span>
-          <h2 class="display">the people</h2>
-        </header>
-        <p class="prose hinge" data-reveal>none of it was only me.</p>
-        <div class="credits">
-          {Object.entries(people).map(([group, list]) => (
-            <div class="credit-group" data-reveal>
-              <h3 class="mono">{group}</h3>
-              <ul>
-                {list.map(([name, role]) => (
-                  <li><span class="nm">{name}</span><span class="rl cold">{role}</span></li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+        <details class="who" data-reveal>
+          <summary>
+            <span class="hinge">none of it was only me.</span>
+            <span class="mono cue">see who ↓</span>
+          </summary>
+          <div class="credits">
+            {Object.entries(people).map(([group, list]) => (
+              <div class="credit-group">
+                <h3 class="mono">{group}</h3>
+                <ul>
+                  {list.map(([name, role]) => (
+                    <li><span class="nm">{name}</span><span class="rl cold">{role}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </details>
       </div>
     </section>
 
@@ -460,45 +395,21 @@ const people = {
   .tiles h3 { font-size: var(--t-small); font-weight: 400; color: var(--bone); line-height: 1.3; }
   .tile-note { font-size: var(--t-micro); color: var(--bone-dim); font-style: italic; line-height: 1.45; }
 
-  /* ---------- pattern ---------- */
-  .plot { overflow-x: auto; }
-  .plot svg { min-width: 40rem; }
-
-  /* The plot draws itself as you arrive: the three threads extend left to
-     right, then their projects land. "where am i?" goes first and longest,
-     because it is the one that runs the whole decade. */
-  .plot .lane-line {
-    stroke-dasharray: var(--len);
-    stroke-dashoffset: var(--len);
-  }
-  .plot.is-in .lane-line {
-    animation: draw 1.4s var(--ease) forwards;
-    animation-delay: calc(var(--i) * 0.22s);
-  }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
-
-  .plot .dot { opacity: 0; }
-  .plot.is-in .dot {
-    animation: land 0.45s var(--ease) forwards;
-    animation-delay: calc(0.5s + var(--i) * 0.22s + var(--p) * 0.05s);
-  }
-  @keyframes land {
-    from { opacity: 0; transform: scale(0.2); transform-box: fill-box; transform-origin: center; }
-    to   { opacity: 1; transform: scale(1);   transform-box: fill-box; transform-origin: center; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .plot .lane-line { stroke-dashoffset: 0; }
-    .plot .dot { opacity: 1; }
-    .plot.is-in .lane-line, .plot.is-in .dot { animation: none; }
-  }
-  .ax { font-family: var(--mono); font-size: 11px; fill: var(--steel-dim); }
-  .lane { font-family: var(--mono); font-size: 11px; fill: var(--steel); letter-spacing: .08em; text-transform: uppercase; }
-  .ends { display: grid; gap: 2rem; margin-top: 3.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
-  .ends > div { display: grid; gap: 0.5rem; }
-  .meas-big { font-size: clamp(2rem, 6vw, 3.25rem); color: var(--brass); }
+  /* ---------- pattern ---------- */ }
 
   /* ---------- credits ---------- */
+  /* <details> so it works with zero JS and stays keyboard-accessible */
+  .who summary {
+    cursor: pointer; list-style: none;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.9rem;
+  }
+  .who summary::-webkit-details-marker { display: none; }
+  .who summary .hinge { font-size: var(--t-lead); }
+  .who summary .cue { color: var(--steel-dim); transition: color 0.2s var(--ease); }
+  .who summary:hover .cue { color: var(--brass); }
+  .who[open] summary .cue { color: var(--steel-dim); }
+  .who[open] summary .cue::after { content: ''; }
+
   .credits { margin-top: 3rem; display: grid; gap: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
   .credit-group h3 { margin-bottom: 1rem; }
   .credit-group ul { list-style: none; padding: 0; display: grid; gap: 0.85rem; }

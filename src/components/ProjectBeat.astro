@@ -3,7 +3,6 @@
 // while it is on screen; the text moves past it. This replaces the card grid,
 // which was a résumé with borders.
 import type { Project } from '../data/projects';
-import { THREADS } from '../data/projects';
 import { mediaFor, stillsFor, pairMedia } from '../data/media';
 
 interface Props { project: Project; index: number }
@@ -72,10 +71,11 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
     {p.problem && <p class="problem">{p.problem}</p>}
     <p class="what">{p.what}</p>
     {p.note && <p class="note mono">{p.note}</p>}
-    <ul class="tags">
-      {p.outcome && <li class={`out out-${p.outcome}`}>{p.outcome}</li>}
-      {p.threads.map((t) => <li class="mono th">{THREADS[t].label}</li>)}
-    </ul>
+    {p.doc && (
+      <p class="doc">
+        <a href={p.doc.href} target="_blank" rel="noopener">{p.doc.label} <span class="arrow">↗</span></a>
+      </p>
+    )}
   </div>
 </article>
 
@@ -208,12 +208,7 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
   .what { color: var(--bone-dim); font-size: var(--t-small); line-height: 1.65; max-width: 34rem; }
   .note { text-transform: none; letter-spacing: 0.02em; color: var(--steel-dim); line-height: 1.55; }
 
-  .tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
-  .tags li {
-    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
-    text-transform: uppercase; padding: 0.2rem 0.5rem;
-    border: 1px solid var(--hairline-2); color: var(--steel);
-  }
-  .out { color: var(--brass) !important; border-color: var(--brass) !important; }
-  .out-failed, .out-abandoned { color: var(--steel) !important; border-style: dashed; border-color: var(--hairline-2) !important; }
+  .doc { margin-top: 0.5rem; font-size: var(--t-small); }
+  .doc a { color: var(--bone-dim); border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
+  .doc a:hover { color: var(--brass); border-color: var(--brass); }
 </style>

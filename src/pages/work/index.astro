@@ -1,15 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { projects, THREADS, type Thread } from '../../data/projects';
+import { projects } from '../../data/projects';
 import { mediaFor } from '../../data/media';
 
 const sorted = [...projects].sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
-const threadKeys = Object.keys(THREADS) as Thread[];
-
-const OUTCOME_LABEL: Record<string, string> = {
-  sold: 'sold', deployed: 'deployed', award: 'award', patent: 'patent',
-  published: 'published', failed: 'failed', abandoned: 'abandoned',
-};
 ---
 
 <Base
@@ -26,21 +20,9 @@ const OUTCOME_LABEL: Record<string, string> = {
       </p>
     </header>
 
-    <div class="filters" role="group" aria-label="Filter by thread">
-      <button class="chip is-on" data-filter="all" aria-pressed="true">
-        all <span class="ct mono">{projects.length}</span>
-      </button>
-      {threadKeys.map((k) => (
-        <button class="chip" data-filter={k} aria-pressed="false">
-          {THREADS[k].label}
-          <span class="ct mono">{projects.filter((p) => p.threads.includes(k)).length}</span>
-        </button>
-      ))}
-    </div>
-
     <ol class="list">
       {sorted.map((p) => (
-        <li class="row" data-threads={p.threads.join(' ')}>
+        <li class="row">
           <span class="yr mono">{p.yearLabel}</span>
           <div class="thumb">
             {(() => {
@@ -62,10 +44,6 @@ const OUTCOME_LABEL: Record<string, string> = {
             <p class="what cold">{p.what}</p>
             {p.note && <p class="note mono">{p.note}</p>}
           </div>
-          <div class="tags">
-            {p.outcome && <span class={`out out-${p.outcome}`}>{OUTCOME_LABEL[p.outcome]}</span>}
-            {p.threads.map((t) => <span class="th mono">{THREADS[t].label}</span>)}
-          </div>
         </li>
       ))}
     </ol>
@@ -84,17 +62,6 @@ const OUTCOME_LABEL: Record<string, string> = {
   .back:hover { color: var(--brass); }
   .head h1 { font-size: var(--t-act); }
 
-  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2.5rem; }
-  .chip {
-    font: inherit; font-size: var(--t-small); color: var(--bone-dim);
-    background: transparent; border: 1px solid var(--hairline);
-    padding: 0.45rem 0.85rem; cursor: pointer; display: flex; gap: 0.5rem; align-items: center;
-    transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
-  }
-  .chip:hover { color: var(--bone); border-color: var(--hairline-2); }
-  .chip.is-on { color: var(--ink); background: var(--brass); border-color: var(--brass); }
-  .chip.is-on .ct { color: var(--ink); opacity: 0.7; }
-  .ct { color: var(--steel-dim); }
 
   .list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--hairline); }
   .row {
@@ -103,7 +70,7 @@ const OUTCOME_LABEL: Record<string, string> = {
     grid-template-columns: 1fr;
   }
   @media (min-width: 48rem) {
-    .row { grid-template-columns: 5.5rem 7rem minmax(0, 1fr) 10rem; align-items: start; }
+    .row { grid-template-columns: 5.5rem 7rem minmax(0, 1fr); align-items: start; }
   }
   .thumb { line-height: 0; }
   .thumb img, .thumb-empty {
@@ -114,7 +81,6 @@ const OUTCOME_LABEL: Record<string, string> = {
     background: repeating-linear-gradient(45deg, transparent 0 7px, rgba(255,255,255,.02) 7px 14px), var(--ink-1);
   }
   @media (max-width: 47.99rem) { .thumb { max-width: 9rem; } }
-  .row[hidden] { display: none; }
   .yr { color: var(--steel-dim); padding-top: 0.25rem; }
   .body { display: grid; gap: 0.4rem; }
   .body h2 { font-family: var(--display); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
@@ -125,35 +91,7 @@ const OUTCOME_LABEL: Record<string, string> = {
   .what { font-size: var(--t-small); line-height: 1.6; }
   .note { text-transform: none; letter-spacing: 0.02em; color: var(--steel-dim); line-height: 1.5; }
 
-  .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; align-content: start; }
-  .out {
-    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
-    text-transform: uppercase; padding: 0.2rem 0.5rem; border: 1px solid var(--hairline-2);
-    color: var(--bone-dim);
-  }
-  .out-sold, .out-deployed, .out-award { color: var(--brass); border-color: var(--brass); }
-  .out-failed, .out-abandoned { color: var(--steel); border-style: dashed; }
-  .th { color: var(--steel-dim); padding: 0.2rem 0; }
 
   .foot { margin-top: 2.5rem; color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
 </style>
 
-<script>
-  const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
-  const rows = [...document.querySelectorAll<HTMLElement>('.row')];
-
-  chips.forEach((chip) =>
-    chip.addEventListener('click', () => {
-      const f = chip.dataset.filter!;
-      chips.forEach((c) => {
-        const on = c === chip;
-        c.classList.toggle('is-on', on);
-        c.setAttribute('aria-pressed', String(on));
-      });
-      rows.forEach((r) => {
-        const show = f === 'all' || (r.dataset.threads ?? '').split(' ').includes(f);
-        r.hidden = !show;
-      });
-    })
-  );
-</script>

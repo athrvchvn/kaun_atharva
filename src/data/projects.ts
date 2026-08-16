@@ -26,6 +26,7 @@ export interface Project {
                          // render or concept animation rather than real footage
   pair?: [string, string]; // two slugs whose images render side by side, for
                             // minor builds grouped into one beat (e.g. club projects)
+  doc?: { href: string; label: string }; // a report or deck the visitor can open
 }
 
 export const THREADS: Record<Thread, { label: string; question: string }> = {
@@ -142,9 +143,11 @@ export const projects: Project[] = [
     what: 'A low-cost tabletop wind tunnel with transparent test section and custom contraction–diffuser geometry, plus an LED-based PIV alternative using OpenCV optical flow to visualise velocity fields.',
     threads: [] },
 
-  { slug: 'ball-balancing-bot', title: 'Ball balancing bot', year: 2026, yearLabel: '2nd yr', act: 4,
-    what: 'A balancing platform.', threads: ['where'],
-    note: 'On neither résumé.' },
+  { slug: 'ball-balancing-bot', title: 'Ball balancing bot — a Stewart platform that will not let a ball fall off', year: 2026, yearLabel: '2026', act: 4,
+    what: 'A 3RRS parallel manipulator that keeps a ball balanced at the centre of a tilting plate. An overhead Pi Cam finds the ball by HSV threshold and blob centroid, a PID controller works out the tilt needed to correct it, inverse kinematics converts that tilt into three servo angles, and the loop repeats fast enough that the ball never gets away.',
+    threads: ['where'], deep: true,
+    note: 'AA216 Flight Mechanics & Classical Control, IIT Indore. Group project of five.',
+    doc: { href: '/docs/ball-balancing-bot.pdf', label: 'the course deck' } },
 
   { slug: 'teng-condition-monitoring', title: 'Self-powered IoT fault detection — TENG + STL–CNN–LSTM', year: 2026, yearLabel: '2026', act: 4,
     what: 'A deep-learning fault detection pipeline for rotating machinery using TENG sensors as self-powered vibration transducers. STL decomposition across seven fault classes, 1D-CNN feature extraction, LSTM temporal modelling. 98.57% accuracy — beating oscilloscope (97.31%) and accelerometer (95.83%) baselines.',
