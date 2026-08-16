@@ -135,6 +135,13 @@ export const projects: Project[] = [
     threads: ['where'], outcome: 'award', deep: true,
     note: 'Bronze Medal, Inter IIT Tech Meet 14.0, among all IITs.' },
 
+  // Sits immediately after Eternal: the award is what happened to that project.
+  { slug: 'inter-iit-award', kind: 'award',
+    title: '3rd Position — Inter IIT Tech Meet 14.0, Eternal', year: 2025, yearLabel: '2025', act: 4,
+    what: 'Bronze in the Eternal problem statement — the autonomous warehouse inventory robot — competing against teams from every IIT.',
+    threads: [],
+    note: 'Inter IIT Tech Meet 14.0, held at IIT Patna.' },
+
   { slug: 'aqualoop', title: 'Aqualoop — in-pipe water monitoring and selective recycling', year: 2026, yearLabel: '2026', act: 4,
     what: 'A module that fits between any two pipes and powers itself from the water running through it. A micro-hydro turbine charges the electronics; pH, TDS and turbidity sensors feed a polynomial regression on the microcontroller to produce a live water quality score. At a building inlet it verifies the incoming supply and flags contamination. At the outlet it drives smart diverter valves, splitting used water into a recycling tank or the septic line — instead of treating everything as one waste stream.',
     threads: ['unplugged', 'ships'], outcome: 'award', deep: true,
