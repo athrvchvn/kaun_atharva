@@ -50,4 +50,4 @@ alerts** for when the water goes out of spec and nobody is looking at a phone.
 
 **Second place at the Vishwakarma Awards 2026**, among **1,054 teams**. ₹80,000.
 
-Built by Atharva Chavan, KRM Sadiq, Vansh Ruhela, Diksha Jaurker and Kaushal Gangwar.
+Built with KRM Sadiq, Vansh Ruhela, Diksha Jaurker and Kaushal Gangwar.

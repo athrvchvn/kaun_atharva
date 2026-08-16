@@ -31,11 +31,10 @@ const chars = [...text];
   }
   .ch {
     display: inline-block;
-    /* fixed advance width regardless of which glyph is showing, so a
-       mid-flicker character never nudges its neighbours and can't feed
-       back into the next proximity read */
-    width: 1ch;
-    text-align: center;
+    /* No fixed width: `1ch` made the title read as monospaced and destroyed the
+       display face's spacing. Neighbour-shifting during a flicker is already
+       harmless because positions are measured once (see script) rather than
+       re-read live, so there is no feedback loop to guard against. */
     transition: color 0.3s var(--ease);
   }
   .ch.sp { width: 0.32em; }

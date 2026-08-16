@@ -27,6 +27,7 @@ export interface Project {
   pair?: [string, string]; // two slugs whose images render side by side, for
                             // minor builds grouped into one beat (e.g. club projects)
   doc?: { href: string; label: string }; // a report or deck the visitor can open
+  kind?: 'award';        // renders as an award beat, not a project beat
 }
 
 export const THREADS: Record<Thread, { label: string; question: string }> = {
@@ -43,12 +44,12 @@ export const projects: Project[] = [
     threads: ['ships'], outcome: 'failed', note: 'Broke again a few months later.' },
 
   { slug: 'study-table', title: 'Folding study table', year: 2020, yearLabel: '2020', act: 0,
-    what: 'Built as his part of a home interior his father was contracted for.',
+    what: 'My part of a home interior my father was contracted for.',
     threads: ['ships'], outcome: 'sold', note: 'Delivered to a client at 13.' },
 
   { slug: 'extension-box', title: 'Portable extension box', year: 2018, yearLabel: '~2018', act: 0,
     what: 'The size of a power socket. Housed three devices plus a bulb socket.',
-    threads: ['ships'], note: 'The first thing he remembers making. No photograph survives.' },
+    threads: ['ships'], note: 'The first thing I remember making. No photograph survives.' },
 
   // ---------- act 1 — harshit, and then the sky ----------
   { slug: 'smart-dustbin', title: 'Smart dustbin', year: 2018, yearLabel: '2018', act: 1,
@@ -75,19 +76,19 @@ export const projects: Project[] = [
 
   { slug: 'fanta-santa', title: 'The Santa that dispensed Fanta', year: 2021, yearLabel: '~2021', act: 1,
     problem: 'me and a friend were bored on christmas.',
-    what: 'A Santa with lit-up eyes, wired to a bottle, dispensing Fanta from his urinal.',
+    what: 'A Santa with lit-up eyes, wired to a bottle, dispensing Fanta from his urinal, which was the entire idea.',
     threads: [], note: 'Made to pass the time. It worked.' },
 
   // ---------- act 3/4 — iit indore ----------
   { slug: 'gps-shoes', title: 'Power-harvesting army boots — laser-textured TENG', year: 2025, yearLabel: '2021–24', act: 3,
     what: 'An army boot that generates its own electricity from walking. A triboelectric nanogenerator in the sole is laser-textured at 355 nm to raise its output, then rectified and stored to run GPS and RFID for locating and identifying soldiers — with no battery to change. Ten pairs were built and delivered to ARDE, Pune.',
     threads: ['where', 'unplugged'], outcome: 'deployed', deep: true,
-    note: 'DRDO / ARDB-funded, three years, led by Prof. I.A. Palani at IIT Indore. Atharva’s first project in that lab: the impedance-matching and rectification circuit, which improved charging efficiency by 54%. Patent filed.' },
+    note: 'DRDO / ARDB-funded, three years, led by Prof. I.A. Palani at IIT Indore. My first project in that lab: the impedance-matching and rectification circuit, which improved charging efficiency by 54%. Patent filed.' },
 
   { slug: 'alzheimers-shoes', title: 'Gait-analysis shoes for early Alzheimer’s detection', year: 2025, yearLabel: '2025', act: 4,
     what: 'A wearable shoe embedded with TENG sensors to monitor gait abnormalities.',
     threads: ['where', 'unplugged'], outcome: 'abandoned',
-    note: 'Stopped for three reasons: his own expertise ceiling at the time, TENG not showing promise, and training data that would have needed hospital access to patients.' },
+    note: 'I stopped for three reasons: my own expertise ceiling at the time, TENG not showing promise, and training data that would have needed hospital access to patients.' },
 
   { slug: 'micromouse', title: 'Micromouse', year: 2025, yearLabel: '2024–25', act: 4,
     what: 'A maze-solving robot.', threads: ['where'] },
@@ -101,7 +102,7 @@ export const projects: Project[] = [
   { slug: 'iroc-drone', title: 'NoGPS autonomous drone — ISRO Robotics Challenge', year: 2025, yearLabel: '2025', act: 4,
     what: 'An autonomous aerial drone for Martian-surface operation: real-time terrain mapping, safe-spot detection, GPS-independent landing.',
     threads: ['where'], outcome: 'failed', deep: true,
-    note: 'IROC 2025. The archive contains a folder Atharva named “fails” — six crash videos.' },
+    note: 'IROC 2025. There is a folder in my archive named “fails”. It has six videos in it.' },
 
   // NB: this IS the line follower. The course set the line-following brief;
   // the patrolling behaviour was the team's own addition. One project, not two.
@@ -138,6 +139,14 @@ export const projects: Project[] = [
     what: 'A module that fits between any two pipes and powers itself from the water running through it. A micro-hydro turbine charges the electronics; pH, TDS and turbidity sensors feed a polynomial regression on the microcontroller to produce a live water quality score. At a building inlet it verifies the incoming supply and flags contamination. At the outlet it drives smart diverter valves, splitting used water into a recycling tank or the septic line — instead of treating everything as one waste stream.',
     threads: ['unplugged', 'ships'], outcome: 'award', deep: true,
     note: 'Second place, Vishwakarma Awards 2026 — among 1,054 teams. ₹80,000. Team of 5.' },
+
+  // Sits immediately after Aqualoop: the award is what happened to that project,
+  // so it reads as an outcome rather than as a separate achievement.
+  { slug: 'vishwakarma-award', kind: 'award',
+    title: '2nd Prize — Vishwakarma Awards, Intelligent Machines', year: 2026, yearLabel: '2026', act: 4,
+    what: 'Second place among 1,054 teams, with a cash prize of ₹80,000, for Aqualoop — the in-pipe water quality monitoring and selective recycling system.',
+    threads: [],
+    note: 'Awarded by the Maker Bhavan Foundation. Team lead.' },
 
   { slug: 'wind-tunnel', title: 'Low-speed wind tunnel with LED-based PIV', year: 2026, yearLabel: '2025–26', act: 4,
     what: 'A low-cost tabletop wind tunnel with transparent test section and custom contraction–diffuser geometry, plus an LED-based PIV alternative using OpenCV optical flow to visualise velocity fields.',

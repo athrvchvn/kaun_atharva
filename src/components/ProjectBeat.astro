@@ -19,9 +19,10 @@ const pair = p.pair ? pairMedia(p.pair) : [];
 // club builds shown two-up) stays half-height even with images — the point of
 // pairing them is that neither is important enough alone for the full screen.
 const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome));
+const isAward = p.kind === 'award';
 ---
 
-<article class:list={['beat', { flip, major }]} id={`p-${p.slug}`}>
+<article class:list={['beat', { flip, major, award: isAward }]} id={`p-${p.slug}`}>
   <div class="beat-media">
     <div class="sticky">
       {p.pair && (
@@ -64,7 +65,7 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
   </div>
 
   <div class="beat-text">
-    <span class="mono yr">{p.yearLabel}</span>
+    <span class="mono yr">{isAward ? `${p.yearLabel} · award` : p.yearLabel}</span>
     <h3 class="display">
       {p.deep ? <a href={`/work/${p.slug}`}>{p.title} <span class="arrow">→</span></a> : p.title}
     </h3>
@@ -207,6 +208,15 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
   .problem { color: var(--bone); font-style: italic; font-size: var(--t-lead); line-height: 1.45; }
   .what { color: var(--bone-dim); font-size: var(--t-small); line-height: 1.65; max-width: 34rem; }
   .note { text-transform: none; letter-spacing: 0.02em; color: var(--steel-dim); line-height: 1.55; }
+
+  /* An award is a punctuation mark in the timeline, not another project —
+     shorter, and the only place the brass rule appears down the left. */
+  .beat.award { min-height: 68svh; }
+  .beat.award .beat-text {
+    border-left: 2px solid var(--brass);
+    padding-left: 1.25rem;
+  }
+  .beat.award .what { color: var(--bone); }
 
   .doc { margin-top: 0.5rem; font-size: var(--t-small); }
   .doc a { color: var(--bone-dim); border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }

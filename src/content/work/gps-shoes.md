@@ -34,7 +34,7 @@ A TENG produces high-voltage, low-current, irregular AC — almost the least con
 there is. Turning that into something that charges a battery is a separate problem from generating
 it.
 
-**This is the part Atharva worked on:** the impedance-matching and rectification circuit, tuning
+**This is the part I worked on:** the impedance-matching and rectification circuit, tuning
 source impedance from 885 MΩ down to 88.4 MΩ by parallel capacitance. It improved battery charging
 efficiency by **54%**. Patent filed.
 
@@ -49,5 +49,5 @@ RFID for identification and attendance records.
 ## Note
 
 A three-year DRDO/ARDB-funded project led by **Prof. I.A. Palani** at IIT Indore, with a team.
-Atharva joined it in his first year — it was the first thing he worked on after being given access
-to that lab, and it is the reason he was.
+I joined it in my first year. It was the first thing I worked on after being given access to that
+lab, and it is the reason I was.

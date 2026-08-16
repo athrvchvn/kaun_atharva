@@ -58,5 +58,5 @@ relative to the tool, whatever orientation the arm happens to be in.
 
 Featured on **Addverb Technologies' official blog**.
 
-Built by a team of eight: Satyam Ashtikar, Yash Bhamare, Hrishab Mittal, Keshav N., Dhananjay
-Dhumal, Sinam J., Varad Pendse, and Atharva Chavan.
+Built with a team of eight: Satyam Ashtikar, Yash Bhamare, Hrishab Mittal, Keshav N., Dhananjay
+Dhumal, Sinam J. and Varad Pendse.
