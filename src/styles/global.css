@@ -174,12 +174,55 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 }
 
 /* ---------- scroll reveal (CSS + IntersectionObserver, 0 KB of library) ---------- */
+/* Fallback path, for browsers without scroll-driven animations: the observer
+   adds .is-in and this timed transition plays. */
 [data-reveal] {
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
 }
 [data-reveal].is-in { opacity: 1; transform: none; }
+
+/* Preferred path. A timed transition, once tripped, runs on its own clock: it
+   keeps animating after the visitor stops, finishes behind them if they scroll
+   fast, and never runs backwards. That independence is what makes the motion
+   read as an effect laid on top of the page instead of part of moving through
+   it. Driving the same keyframes from a view() timeline instead ties progress
+   to position — the reveal advances exactly as far as you have scrolled, holds
+   when you hold, and reverses when you scroll back. It is the same principle
+   the act passages already use to scrub their video, so the whole page now
+   responds to the scroll in one language rather than two. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal] {
+      transition: none;
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      /* Settled before it reaches comfortable reading height — content should
+         not still be arriving under the reader's eye. Starting slightly into
+         entry avoids motion hard against the viewport edge, where it reads as
+         a twitch rather than an approach. */
+      animation-range: entry 5% entry 55%;
+    }
+  }
+}
+@keyframes reveal-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The failsafe's release hatch, kept working under the scroll-driven path. It
+   has to cancel the animation, not merely set opacity: a running animation
+   outranks normal declarations, so .is-in alone silently stopped releasing
+   anything the moment reveals became scroll-driven. Separate class from .is-in
+   because that one is also set on ordinary reveal and must not kill the
+   animation it is meant to accompany. */
+[data-reveal].reveal-done {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1; transform: none; }
 }

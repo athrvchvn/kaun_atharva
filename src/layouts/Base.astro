@@ -130,9 +130,27 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://kaunatharva
             }
           }
         },
-        { rootMargin: '0px 0px -12% 0px', threshold: 0.05 }
+        // No negative bottom margin: it required an element to rise above the
+        // bottom 12% of the viewport before revealing, which content at the very
+        // end of the page can never do — the footer's contact links sat at
+        // opacity 0 permanently. Plain viewport intersection is correct here.
+        { rootMargin: '0px', threshold: 0.05 }
       );
       document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+      // Safety net: anything still hidden once the page is fully scrolled or
+      // resized gets revealed unconditionally. A reveal animation must never be
+      // the reason content is unreachable.
+      const failsafe = () => {
+        if (innerHeight + scrollY >= document.body.scrollHeight - 2) {
+          // .reveal-done as well as .is-in: under the scroll-driven path a live
+          // animation outranks .is-in's plain declarations, so that class alone
+          // would no longer release anything. .reveal-done cancels it outright.
+          document.querySelectorAll('[data-reveal]:not(.is-in)')
+            .forEach((el) => el.classList.add('is-in', 'reveal-done'));
+        }
+      };
+      addEventListener('scroll', failsafe, { passive: true });
 
       // Project clips play only while on screen. preload="none" means nothing
       // downloads until a visitor actually scrolls near it, so a page of 25

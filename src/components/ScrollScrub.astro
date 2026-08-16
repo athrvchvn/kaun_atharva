@@ -83,6 +83,16 @@ const clip = backdropFor(id);
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* On a phone the passage plays rather than scrubs, so its height no longer
+     has to buy scrub travel — and five passages at 170vh was roughly eight
+     screens of pure transition on a small display, which is where the page
+     started to feel like it was padding itself. */
+  @media (max-width: 55.99rem) {
+    .scrub { height: 105vh; }
+    .scrub.tall { height: 130vh; }
+    .scrub.empty { height: 40vh; }
+  }
+
   /* no scroll-driven motion for anyone who asked not to have it */
   @media (prefers-reduced-motion: reduce) {
     .scrub { height: 70vh; }
@@ -93,6 +103,9 @@ const clip = backdropFor(id);
 
 <script>
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // width, not pointer type alone: a touch laptop scrubs fine, a large phone
+  // does not, and the layout already treats 56rem as the line between the two.
+  const MOBILE = matchMedia('(max-width: 55.99rem)').matches;
 
   document.querySelectorAll<HTMLElement>('.scrub[data-scrub]').forEach((section) => {
     const video = section.querySelector('video') as HTMLVideoElement | null;
@@ -101,6 +114,29 @@ const clip = backdropFor(id);
     if (!video || !src) return;
 
     if (REDUCED) { video.preload = 'metadata'; video.src = src; return; }
+
+    // Phones do not scrub. The desktop path below fetches the whole clip as a
+    // Blob and then writes currentTime once per animation frame — a full
+    // download plus a seek storm, which are the two things mobile hardware
+    // handles worst, and there are five of these passages. Playing the clip
+    // while it is on screen gives the same footage and the same sense of moving
+    // through something, but it streams instead of buffering whole, decodes on
+    // the hardware path, and costs nothing per scroll event.
+    if (MOBILE) {
+      video.loop = true;
+      new IntersectionObserver(
+        (es) => es.forEach((e) => {
+          if (e.isIntersecting) {
+            if (!video.src) { video.preload = 'auto'; video.src = src; }
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        }),
+        { threshold: 0.15 }
+      ).observe(section);
+      return;
+    }
 
     // ---- Range rule: some hosts don't serve partial content, and then every
     // seek clamps to zero. Fetching the whole file as a Blob works everywhere.

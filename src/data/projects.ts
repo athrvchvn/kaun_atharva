@@ -163,7 +163,13 @@ export const projects: Project[] = [
     threads: ['where'], outcome: 'published', deep: true,
     note: 'Team of 8. Featured on Addverb Technologies’ official blog.' },
 
-  { slug: 'dune', title: 'DUNE — Dual UWB Navigation Engine', year: 2026, yearLabel: '2026', act: 5,
+  // Finished and published, so it sits in act 4 rather than act 5. Act 5 is
+  // reserved for the work that is still open — the closing line there ("that
+  // last one is not working yet") points at drone-rover, which is why DUNE
+  // leaving act 5 makes that act read correctly rather than emptying it.
+  // Note this is IIT Kanpur, not Indore like the rest of act 4; act 4 has no
+  // visible heading naming an institution, so nothing on the page contradicts.
+  { slug: 'dune', title: 'DUNE — Dual UWB Navigation Engine', year: 2026, yearLabel: '2026', act: 4,
     what: 'UWB-based indoor localization for a six-wheeled rocker-bogie rover in GPS-denied environments. Sub-7 cm positional accuracy in a 2×2 m arena via two-anchor two-way ranging. Dual-tag heading estimation with EKF fusion of UWB, wheel odometry and IMU.',
     threads: ['where'], outcome: 'published', deep: true,
     note: 'IEEE paper submitted. Open-source library plus hardware. Centre for Mechatronics, IIT Kanpur.' },

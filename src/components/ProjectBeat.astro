@@ -98,6 +98,18 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
       gap: clamp(2rem, 4vw, 3.5rem);
       align-items: center;
     }
+    /* The premise in the header comment — media holds while the words move past
+       it — was never actually wired: `.sticky` had no rule anywhere, so every
+       beat scrolled as one rigid block and the page read as a stack of separate
+       cards. Stretching the media column gives the sticky child room to travel
+       within its own beat, so the clip stays put as its text rides up alongside
+       and only releases when the beat itself leaves. That continuity is what
+       carries one beat into the next without a visible seam. */
+    .beat-media { align-self: stretch; }
+    .beat-media .sticky {
+      position: sticky;
+      top: max(9vh, calc((100svh - 68svh) / 2));
+    }
     /* the wide column has to follow the media across the flip. `order` alone
        moves the items but leaves the track sizes put, which silently parked
        every alternating clip in the narrow column. */
@@ -106,17 +118,26 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
     .beat.flip .beat-text  { order: 1; }
   }
 
+  /* No fixed ratio and no letterbox. The archive mixes landscape and portrait
+     phone video, so any single ratio has to pad one of them — and those bars
+     read as an empty frame around the clip rather than disappearing into the
+     background. Letting width/height stay `auto` under a max-width/max-height
+     cap makes the element box exactly the media's own shape: it scales down to
+     fit the column and the screen, keeps its aspect ratio, and cannot produce
+     a bar. Portrait clips end up tall and narrow, which is correct. */
   .beat-media video,
-  .beat-media img,
+  .beat-media img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 68svh;
+    margin-inline: auto;
+  }
   .empty {
     width: 100%;
     aspect-ratio: 16 / 10;
     max-height: 68svh;
-    /* `contain`, not `cover`: the archive mixes landscape and portrait phone
-       video, and a 16:10 crop silently eats the subject of the vertical ones —
-       the cobot clip loses both the arm and the glove. Bars are invisible
-       against --ink-1 anyway. */
-    object-fit: contain;
     background: var(--ink-1);
     border: 1px solid var(--hairline);
   }
@@ -132,17 +153,24 @@ const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome
       var(--ink-1);
   }
 
-  /* two minor builds, side by side, same frame the single-media slot would use */
+  /* Two minor builds side by side. No outer ratio either: forcing 16/10 here
+     and halving it left each cell at ~0.8, so `cover` cropped more than half
+     the width off a 16:9 photo. Each image now keeps its own shape and the row
+     is only as tall as the shorter of the two allows. */
   .pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2px;
-    aspect-ratio: 16 / 10;
-    max-height: 68svh;
-    background: var(--hairline);
-    border: 1px solid var(--hairline);
+    align-items: start;
   }
-  .pair img { width: 100%; height: 100%; object-fit: cover; background: var(--ink-1); }
+  /* no height cap here on purpose — each image is already only half a column
+     wide, so its natural height is modest, and a cap fighting width:100% is
+     exactly what puts bars back. */
+  .pair img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
   .pair[data-count="1"] { grid-template-columns: 1fr; }
   .pair .empty { aspect-ratio: auto; }
   @media (max-width: 55.99rem) {

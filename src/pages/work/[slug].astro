@@ -106,9 +106,12 @@ const stills = stillsFor(project.slug);
   }
 
   .hero-media { margin: 0 0 2rem; }
+  /* natural shape, capped — a fixed 16/9 padded every portrait clip with bars */
   .hero-media video, .hero-media img {
-    width: 100%; aspect-ratio: 16 / 9; object-fit: contain;
-    background: var(--ink-1); border: 1px solid var(--hairline);
+    display: block;
+    width: auto; height: auto;
+    max-width: 100%; max-height: 74svh;
+    margin-inline: auto;
   }
   .hero-media figcaption {
     padding-top: 0.7rem; color: var(--steel-dim);

@@ -221,14 +221,13 @@ const people = {
       </div>
     </section>
 
-    <ScrollScrub id="t-3-4" label="then it got fast" />
+    <ScrollScrub id="t-3-4" label="2024 — 2026 · then it got fast" />
 
-    <!-- ══════════ 6. ACT IV — the bulk of the site ══════════ -->
+    <!-- ══════════ 6. ACT IV — the bulk of the site ══════════
+         No ActHead here on purpose: the passage above carries both the years
+         and the line, so a section title underneath was pure repetition and
+         extra scroll. The projects start immediately. -->
     <section class="act" id="act-4">
-      <div class="wrap">
-        <ActHead id="act-4" num="04" years="2024 — 2026" title="it leaves the building" />
-      </div>
-
       <div class="wrap beats">
         {act(4).map((p, i) => <ProjectBeat project={p} index={i} />)}
       </div>
@@ -331,8 +330,9 @@ const people = {
         <p class="prose dim" data-reveal>mechanical engineering, iit indore.</p>
         <ul class="links" data-reveal>
           <li><a href="mailto:atharvachavan346@gmail.com">atharvachavan346@gmail.com</a></li>
+          <li><a href="tel:+919309147663">+91 93091 47663</a></li>
           <li><a href="https://github.com/athrvchvn" rel="me noopener">github</a></li>
-          <li><a href="https://linkedin.com/in/athrvchvan" rel="me noopener">linkedin</a></li>
+          <li><a href="https://www.linkedin.com/in/athrvchavan" rel="me noopener">linkedin</a></li>
           <li><a href="/work">all the work →</a></li>
         </ul>
       </div>
@@ -440,11 +440,21 @@ const people = {
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
   }
   .tiles li { display: grid; gap: 0.35rem; align-content: start; }
-  /* `contain`, not `cover`: this footage is a mix of portrait phone video and
-     landscape, and at tile size a crop silently eats the subject. Letterboxing
-     is invisible against --ink-1 anyway. */
-  .tiles video, .tiles img, .tiles .empty {
-    width: 100%; aspect-ratio: 1 / 1; object-fit: contain;
+  /* No square box: this footage mixes portrait phone video and landscape, so a
+     1/1 frame padded nearly every tile with bars. Natural height instead — the
+     tiles are a masonry-ish row of differently shaped clips, which is honest to
+     the footage and leaves no empty frame around any of it. */
+  /* auto on both axes under two caps: the box then scales to fit width AND
+     height while keeping its ratio, so a tall portrait clip in a narrow tile
+     shrinks rather than getting bars pasted down its sides. */
+  .tiles video, .tiles img {
+    display: block;
+    width: auto; height: auto;
+    max-width: 100%; max-height: 20rem;
+    margin-inline: auto;
+  }
+  .tiles .empty {
+    width: 100%; aspect-ratio: 1 / 1;
     background: var(--ink-1); border: 1px solid var(--hairline);
   }
   .tiles h3 { font-size: var(--t-small); font-weight: 400; color: var(--bone); line-height: 1.3; }
