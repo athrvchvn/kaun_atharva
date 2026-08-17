@@ -1,0 +1,307 @@
+---
+// A board visitors can pin a note to. Click an empty spot to place one, drag to
+// move it.
+//
+// ⚠️ STORAGE: notes currently live in the visitor's own localStorage — they see
+// their note, nobody else does. Making this a real guestbook needs a backend
+// (Firebase would fit; it is already used in the MMS project). Everything that
+// touches storage is isolated in the `store` object below, so swapping it is a
+// contained change and nothing else in this file has to move.
+---
+
+<section class="act board-sec" id="board">
+  <div class="wrap">
+    <header class="act-head" data-reveal>
+      <span class="mono">say something</span>
+      <h2 class="display">leave a note</h2>
+    </header>
+    <p class="prose dim" data-reveal>
+      click anywhere on the board. drag it wherever you like.
+    </p>
+
+    <div class="board" id="board-surface" data-reveal role="application"
+         aria-label="Sticky note board. Click to add a note.">
+      <p class="empty-hint mono" id="board-hint">click to add the first note</p>
+    </div>
+
+    <p class="board-foot mono" data-reveal id="board-foot"></p>
+  </div>
+</section>
+
+<div class="sticky-modal" id="note-modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="nm-title">
+    <h3 id="nm-title" class="display">new sticky note</h3>
+    <label>your name <input id="nm-name" maxlength="40" autocomplete="name" /></label>
+    <label>email <span class="opt">optional</span>
+      <input id="nm-mail" type="email" maxlength="80" autocomplete="email" /></label>
+    <label>your message <textarea id="nm-msg" maxlength="220" rows="4"></textarea></label>
+    <p class="nm-err mono" id="nm-err" hidden>a message is needed</p>
+    <div class="nm-actions">
+      <button type="button" class="nm-place" id="nm-place">place note</button>
+      <button type="button" class="nm-cancel" id="nm-cancel">cancel</button>
+    </div>
+  </div>
+</div>
+
+<template id="note-tpl">
+  <article class="note" tabindex="0">
+    <span class="tape" aria-hidden="true"></span>
+    <p class="note-body"></p>
+    <footer>
+      <span class="note-by"></span>
+      <span class="note-date mono"></span>
+    </footer>
+    <button class="note-del" aria-label="Delete this note" title="Delete">✕</button>
+  </article>
+</template>
+
+<style>
+  .board-sec { padding-block: clamp(4rem, 12vh, 8rem); }
+  .board-sec .prose { margin-bottom: 2rem; }
+
+  .board {
+    position: relative;
+    min-height: min(60svh, 34rem);
+    border: 1px solid var(--hairline);
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0) 0 0 / 26px 26px,
+      var(--ink-1);
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .empty-hint {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: var(--steel-dim); pointer-events: none;
+  }
+  .board.has-notes .empty-hint { display: none; }
+
+  .note {
+    position: absolute;
+    width: 12.5rem;
+    min-height: 9.5rem;
+    padding: 1.5rem 1rem 0.75rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    color: #17130c;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    cursor: grab;
+    /* paper tones muted enough to sit on a workshop-dark page — the reference's
+       bright pastels would have fought everything else on the site */
+    background: var(--note-bg, #d8c98f);
+    transform: rotate(var(--rot, 0deg));
+    transition: box-shadow 0.2s var(--ease);
+  }
+  .note:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+  .note.dragging { cursor: grabbing; box-shadow: 0 18px 40px rgba(0,0,0,0.6); z-index: 30; }
+
+  .tape {
+    position: absolute; top: -0.55rem; left: 50%;
+    width: 3.4rem; height: 1.1rem; transform: translateX(-50%) rotate(-1.5deg);
+    background: rgba(255,255,255,0.22);
+    border-left: 1px solid rgba(255,255,255,0.12);
+    border-right: 1px solid rgba(255,255,255,0.12);
+  }
+
+  .note-body {
+    font-family: 'Handwriting', var(--body);
+    font-size: 1.0625rem; line-height: 1.45;
+    flex: 1; white-space: pre-wrap; word-break: break-word;
+  }
+  .note footer {
+    border-top: 1px solid rgba(0,0,0,0.18);
+    padding-top: 0.4rem; display: grid; gap: 0.1rem;
+  }
+  .note-by { font-size: 0.8125rem; font-weight: 700; }
+  .note-date { font-size: 0.625rem; color: rgba(0,0,0,0.5); letter-spacing: 0.06em; }
+
+  .note-del {
+    position: absolute; top: 0.3rem; right: 0.4rem;
+    background: transparent; border: 0; cursor: pointer;
+    font-size: 0.75rem; color: rgba(0,0,0,0.35); padding: 0.2rem;
+    opacity: 0; transition: opacity 0.15s var(--ease);
+  }
+  .note:hover .note-del, .note:focus-within .note-del { opacity: 1; }
+  .note-del:hover { color: rgba(0,0,0,0.75); }
+
+  /* ---- composer modal ---- */
+  .sticky-modal {
+    position: fixed; inset: 0; z-index: 80;
+    background: rgba(6,8,9,0.72);
+    display: grid; place-items: center;
+    padding: clamp(1rem, 5vw, 3rem);
+  }
+  .sticky-modal[hidden] { display: none; }
+  .sheet {
+    width: min(100%, 26rem);
+    background: var(--ink-1);
+    border: 1px solid var(--hairline-2);
+    padding: clamp(1.25rem, 4vw, 1.75rem);
+    display: grid; gap: 0.9rem;
+  }
+  .sheet h3 { font-size: 1.35rem; }
+  .sheet label {
+    display: grid; gap: 0.35rem;
+    font-family: var(--mono); font-size: var(--t-micro);
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--steel);
+  }
+  .sheet .opt { color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
+  .sheet input, .sheet textarea {
+    font: inherit; font-family: var(--body); font-size: var(--t-body);
+    text-transform: none; letter-spacing: normal;
+    color: var(--bone); background: var(--ink);
+    border: 1px solid var(--hairline-2); padding: 0.55rem 0.7rem; resize: vertical;
+  }
+  .sheet input:focus, .sheet textarea:focus { outline: none; border-color: var(--brass); }
+  .nm-err { color: var(--brass); text-transform: none; letter-spacing: 0.02em; }
+  .nm-actions { display: flex; gap: 0.6rem; margin-top: 0.2rem; }
+  .nm-place, .nm-cancel {
+    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; padding: 0.6rem 1rem; border: 1px solid;
+  }
+  .nm-place { background: var(--brass); color: var(--ink); border-color: var(--brass); }
+  .nm-place:hover { background: var(--brass-lit); border-color: var(--brass-lit); }
+  .nm-cancel { background: transparent; color: var(--bone-dim); border-color: var(--hairline-2); }
+  .nm-cancel:hover { color: var(--bone); border-color: var(--steel); }
+
+  .board-foot { margin-top: 1rem; color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
+
+  @media (max-width: 40rem) {
+    .note { width: 10.5rem; min-height: 8.5rem; }
+    .board { min-height: 30rem; }
+  }
+</style>
+
+<script>
+  const board = document.getElementById('board-surface');
+  const tpl = document.getElementById('note-tpl') as HTMLTemplateElement | null;
+  const foot = document.getElementById('board-foot');
+  if (board && tpl) {
+    type Note = { id: string; text: string; by: string; x: number; y: number; rot: number; hue: number; at: number };
+
+    // ---- storage: the only part that changes if this gets a real backend ----
+    const KEY = 'ka-notes-v1';
+    const store = {
+      all(): Note[] {
+        try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; }
+      },
+      save(notes: Note[]) {
+        try { localStorage.setItem(KEY, JSON.stringify(notes)); } catch {}
+      },
+    };
+
+    const PAPER = ['#d8c98f', '#c9b6d8', '#9fc4b0', '#d8a9a0', '#a9bcd8'];
+    const W = 200, H = 152;                 // note footprint, for clamping
+    let notes: Note[] = store.all();
+
+    const fmt = (t: number) =>
+      new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+    const render = () => {
+      board.querySelectorAll('.note').forEach((n) => n.remove());
+      for (const n of notes) board.appendChild(build(n));
+      board.classList.toggle('has-notes', notes.length > 0);
+      if (foot) foot.textContent = notes.length
+        ? `${notes.length} note${notes.length > 1 ? 's' : ''} · saved in your browser only`
+        : '';
+    };
+
+    function build(n: Note): HTMLElement {
+      const el = (tpl!.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLElement;
+      el.style.left = `${n.x}px`;
+      el.style.top = `${n.y}px`;
+      el.style.setProperty('--rot', `${n.rot}deg`);
+      el.style.setProperty('--note-bg', PAPER[n.hue % PAPER.length]);
+      el.querySelector('.note-body')!.textContent = n.text;
+      el.querySelector('.note-by')!.textContent = n.by ? `— ${n.by}` : '— anonymous';
+      el.querySelector('.note-date')!.textContent = fmt(n.at);
+      el.dataset.id = n.id;
+      el.querySelector('.note-del')!.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notes = notes.filter((x) => x.id !== n.id);
+        store.save(notes); render();
+      });
+      makeDraggable(el, n);
+      return el;
+    }
+
+    function makeDraggable(el: HTMLElement, n: Note) {
+      let dx = 0, dy = 0, moved = false;
+      el.addEventListener('pointerdown', (e) => {
+        if ((e.target as HTMLElement).closest('.note-del')) return;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+        const r = el.getBoundingClientRect();
+        dx = e.clientX - r.left; dy = e.clientY - r.top; moved = false;
+      });
+      el.addEventListener('pointermove', (e) => {
+        if (!el.classList.contains('dragging')) return;
+        moved = true;
+        const b = board.getBoundingClientRect();
+        n.x = clamp(e.clientX - b.left - dx, 0, b.width - W);
+        n.y = clamp(e.clientY - b.top - dy, 0, b.height - H);
+        el.style.left = `${n.x}px`;
+        el.style.top = `${n.y}px`;
+      });
+      const end = () => {
+        if (!el.classList.contains('dragging')) return;
+        el.classList.remove('dragging');
+        if (moved) store.save(notes);
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+    }
+
+    // ---- placing a new note: click the board, fill the modal ----
+    const modal  = document.getElementById('note-modal')!;
+    const fName  = document.getElementById('nm-name') as HTMLInputElement;
+    const fMail  = document.getElementById('nm-mail') as HTMLInputElement;
+    const fMsg   = document.getElementById('nm-msg')  as HTMLTextAreaElement;
+    const fErr   = document.getElementById('nm-err')!;
+    let pending: { x: number; y: number; rot: number; hue: number } | null = null;
+    let lastFocus: HTMLElement | null = null;
+
+    const closeModal = () => {
+      modal.hidden = true; pending = null; fErr.hidden = true;
+      document.body.style.overflow = '';
+      lastFocus?.focus();
+    };
+
+    board.addEventListener('pointerdown', (e) => {
+      if (e.target !== board && !(e.target as HTMLElement).classList.contains('empty-hint')) return;
+      const b = board.getBoundingClientRect();
+      pending = {
+        x: clamp(e.clientX - b.left - W / 2, 0, b.width - W),
+        y: clamp(e.clientY - b.top - H / 2, 0, b.height - H),
+        rot: Math.random() * 4 - 2,
+        hue: Math.floor(Math.random() * PAPER.length),
+      };
+      lastFocus = document.activeElement as HTMLElement;
+      fName.value = ''; fMail.value = ''; fMsg.value = ''; fErr.hidden = true;
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      fName.focus();
+    });
+
+    document.getElementById('nm-place')!.addEventListener('click', () => {
+      const text = fMsg.value.trim();
+      if (!text || !pending) { fErr.hidden = false; fMsg.focus(); return; }
+      notes.push({
+        id: crypto.randomUUID(), text,
+        by: fName.value.trim().slice(0, 40),
+        x: pending.x, y: pending.y, rot: pending.rot, hue: pending.hue, at: Date.now(),
+      });
+      store.save(notes);
+      closeModal();
+      render();
+    });
+
+    document.getElementById('nm-cancel')!.addEventListener('click', closeModal);
+    modal.addEventListener('pointerdown', (e) => { if (e.target === modal) closeModal(); });
+    addEventListener('keydown', (e) => { if (!modal.hidden && e.key === 'Escape') closeModal(); });
+
+    render();
+  }
+</script>

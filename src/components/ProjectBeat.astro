@@ -19,7 +19,8 @@ const pair = p.pair ? pairMedia(p.pair) : [];
 // club builds shown two-up) stays half-height even with images — the point of
 // pairing them is that neither is important enough alone for the full screen.
 const major = !p.pair && (Boolean(media) || Boolean(p.deep) || Boolean(p.outcome));
-const isAward = p.kind === 'award';
+const isAward = p.kind === 'award' || p.kind === 'milestone';
+const kindLabel = p.kind === 'milestone' ? 'internship' : 'award';
 ---
 
 <article class:list={['beat', { flip, major, award: isAward }]} id={`p-${p.slug}`}>
@@ -65,7 +66,7 @@ const isAward = p.kind === 'award';
   </div>
 
   <div class="beat-text">
-    <span class="mono yr">{isAward ? `${p.yearLabel} · award` : p.yearLabel}</span>
+    <span class="mono yr">{isAward ? `${p.yearLabel} · ${kindLabel}` : p.yearLabel}</span>
     <h3 class="display">
       {p.deep ? <a href={`/work/${p.slug}`}>{p.title} <span class="arrow">→</span></a> : p.title}
     </h3>

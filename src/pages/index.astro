@@ -5,6 +5,7 @@ import ProjectBeat from '../components/ProjectBeat.astro';
 import ActHead from '../components/ActHead.astro';
 import ScrollScrub from '../components/ScrollScrub.astro';
 import MagneticTitle from '../components/MagneticTitle.astro';
+import StickyBoard from '../components/StickyBoard.astro';
 import { projects } from '../data/projects';
 import { mediaFor, hasMontage } from '../data/media';
 
@@ -257,6 +258,8 @@ const people = {
         </details>
       </div>
     </section>
+
+    <StickyBoard />
 
     <!-- ══════════ 10. CONTACT ══════════ -->
     <footer class="act contact" id="contact">

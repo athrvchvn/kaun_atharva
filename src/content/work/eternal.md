@@ -31,6 +31,10 @@ The vertical accuracy figure is the one worth reading twice: ±0.02 cm on the Z-
 QR detection reliable at 1800 mm, and it came from the belt drive and frame stiffness rather than
 from the software.
 
+<figure class="vid">
+  <video src="/media/projects/eternal-alt.mp4" poster="/media/projects/eternal-alt.jpg" controls playsinline preload="none" muted loop aria-label="Eternal scanning a rack face"></video>
+</figure>
+
 ## Where it went
 
 **Bronze Medal, Inter IIT Tech Meet 14.0**, among all IITs. Hardware design lead.

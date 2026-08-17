@@ -27,7 +27,8 @@ export interface Project {
   pair?: [string, string]; // two slugs whose images render side by side, for
                             // minor builds grouped into one beat (e.g. club projects)
   doc?: { href: string; label: string }; // a report or deck the visitor can open
-  kind?: 'award';        // renders as an award beat, not a project beat
+  kind?: 'award' | 'milestone'; // a punctuation mark in the timeline rather
+                                // than a project — same quieter treatment
 }
 
 export const THREADS: Record<Thread, { label: string; question: string }> = {
@@ -125,10 +126,21 @@ export const projects: Project[] = [
     what: 'A custom flight-controller PCB integrating MPU6050 IMU, magnetometer and optical flow sensor. EKF sensor fusion achieving a 25-minute stable hover in GPS-denied conditions.',
     threads: ['where'], note: 'STARC Lab, IIT Indore.' },
 
+  { slug: 'iitisoc-award', kind: 'award',
+    title: 'Gold Medal — IITISoC, Robotics', year: 2025, yearLabel: '2025', act: 4,
+    what: 'Gold in the Robotics domain of the IIT Indore Summer of Code, for the machine management system.',
+    threads: [] },
+
   { slug: 'mms', title: 'Universal Machine Management System (RFID access control)', year: 2025, yearLabel: '2025–', act: 4,
     what: 'Full-stack access-control infrastructure across five lab machines: ESP32 + MFRC522 RFID nodes with relay actuation, an automated card dispenser, an RPi 5 issuing station, and a Firebase backend with a real-time dashboard.',
     threads: ['ships'], outcome: 'deployed', deep: true,
     note: 'IITISoC Gold Medal. Grand Innovation & Best Maker Award, IAMS 2025, ₹62,500. Patent in progress. Operational in Tinkerers’ Lab, IIT Indore.' },
+
+  { slug: 'iams-award', kind: 'award',
+    title: 'Grand Innovation & Best Maker Award — IAMS 2025', year: 2025, yearLabel: '2025', act: 4,
+    what: 'Both the Grand Innovation Award and the Best Maker Award at the Indian Academic Makerspaces Summit, with a cash prize of ₹62,500, for the machine management system.',
+    threads: [],
+    note: 'IAMS 2025, IIT Gandhinagar.' },
 
   { slug: 'eternal', title: 'Eternal — autonomous warehouse inventory robot', year: 2025, yearLabel: '2025', act: 4,
     what: 'A Jetson Orin Nano-powered AMR: ROS2/Nav2, RPLidar A1 SLAM, AMCL localization, four-channel ultrasonic obstacle avoidance. ±7 cm horizontal, ±0.02 cm vertical. Belt-driven Z-axis scanning 200–1800 mm with 100% QR detection.',
@@ -188,6 +200,12 @@ export const projects: Project[] = [
   // leaving act 5 makes that act read correctly rather than emptying it.
   // Note this is IIT Kanpur, not Indore like the rest of act 4; act 4 has no
   // visible heading naming an institution, so nothing on the page contradicts.
+  // The internship that produced DUNE — placed immediately before it.
+  { slug: 'iitk-intern', kind: 'milestone',
+    title: 'Research Intern — Centre for Mechatronics, IIT Kanpur', year: 2026, yearLabel: '2026', act: 4,
+    what: 'Joined the Centre for Mechatronics at IIT Kanpur as a research intern, sponsored by NPTEL. This is where DUNE was built.',
+    threads: [] },
+
   { slug: 'dune', title: 'DUNE — Dual UWB Navigation Engine', year: 2026, yearLabel: '2026', act: 4,
     what: 'UWB-based indoor localization for a six-wheeled rocker-bogie rover in GPS-denied environments. Sub-7 cm positional accuracy in a 2×2 m arena via two-anchor two-way ranging. Dual-tag heading estimation with EKF fusion of UWB, wheel odometry and IMU.',
     threads: ['where'], outcome: 'published', deep: true,
