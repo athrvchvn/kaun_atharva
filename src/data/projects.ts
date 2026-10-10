@@ -63,6 +63,20 @@ export const work: Project[] = [
     facts: [['where', 'centre for mechatronics, IIT Kanpur'], ['role', 'first author'], ['with', 'adersh m · prof. ashish dutta'], ['status', 'submitted to IEEE RA-P · open source']],
     video: 'dune', extras: ['dune-1.jpg', 'dune-2.jpg', 'dune-3.jpg', 'dune-4.jpg', 'iitk-intern.jpg'], page: true },
 
+  { id: 'teng-condition-monitoring', year: '2025–26', title: 'self-powered fault detection', line: 'TENG sensing + STL–CNN–LSTM',
+    say: 'self-powered sensors that listen to a machine and notice when something is going wrong.',
+    body: 'fault detection for rotating machinery using triboelectric nanogenerators as self-powered vibration sensors, streamed over an ESP32-C3. STL decomposition across seven fault classes, a 1D-CNN for features and an LSTM over time reach 98.57% accuracy — ahead of oscilloscope (97.31%) and accelerometer (95.83%) baselines.',
+    note: 'instrumentation & control lab, IIT Indore, under prof. i.a. palani.',
+    facts: [['where', 'instrumentation & control lab, IIT Indore'], ['supervisor', 'prof. i.a. palani'], ['accuracy', '98.57% across 7 fault classes']],
+    video: 'teng-condition-monitoring', page: true },
+
+  { id: 'eternal', year: 'oct–dec 2025', title: 'eternal', line: 'warehouse inventory robot',
+    say: 'a robot that drives through a warehouse and reads every QR code on the shelves.',
+    body: 'a jetson orin nano AMR: ROS2/Nav2, RPLidar SLAM, AMCL localisation and four-channel ultrasonic obstacle avoidance. a belt-driven Z-axis scans shelves from 200 to 1800 mm and reads every QR code, with a LoRa wireless e-stop and a hot-swappable battery.',
+    note: 'hardware & design lead. bronze medal at inter IIT tech meet 14.0, IIT Patna, among all IITs.',
+    facts: [['role', 'hardware & design lead'], ['event', 'inter IIT tech meet 14.0'], ['award', 'bronze medal']],
+    video: 'eternal', extras: ['inter-iit-award.jpg', 'inter-iit-award-1.jpg'], page: true },
+
   { id: 'cobot', year: 'jan–feb 2026', title: 'collaborative robot', line: 'voice and glove control',
     say: 'a robot arm you can ask to pick things up, or steer with a sensor glove.',
     body: 'two ways to drive an addverb syncro 5 six-axis cobot. say “pick up the red bottle” and an LLM extracts the intent, a depth camera sweeps the workspace, YOLO visual servoing centres the target, and the arm grasps it. or wear an ESP32 sensor glove and drive it by hand — seven gestures, classified online at ~20 Hz.',
@@ -76,13 +90,6 @@ export const work: Project[] = [
     note: 'sold to, and now in use in, a research lab.',
     facts: [['role', 'design & assembly lead'], ['build volume', '1000 × 1000 × 600 mm'], ['status', 'sold · in use in a research lab']],
     video: 'cement-3d-printer', page: true },
-
-  { id: 'teng-condition-monitoring', year: '2025–26', title: 'self-powered fault detection', line: 'TENG sensing + STL–CNN–LSTM',
-    say: 'self-powered sensors that listen to a machine and notice when something is going wrong.',
-    body: 'fault detection for rotating machinery using triboelectric nanogenerators as self-powered vibration sensors, streamed over an ESP32-C3. STL decomposition across seven fault classes, a 1D-CNN for features and an LSTM over time reach 98.57% accuracy — ahead of oscilloscope (97.31%) and accelerometer (95.83%) baselines.',
-    note: 'instrumentation & control lab, IIT Indore, under prof. i.a. palani.',
-    facts: [['where', 'instrumentation & control lab, IIT Indore'], ['supervisor', 'prof. i.a. palani'], ['accuracy', '98.57% across 7 fault classes']],
-    video: 'teng-condition-monitoring', page: true },
 
   { id: 'ball-balancing-bot', year: '2026', title: 'ball balancing bot', line: 'a stewart platform that will not let a ball fall off',
     say: 'a tilting plate that watches a ball and keeps it from rolling off.',
@@ -105,13 +112,6 @@ export const work: Project[] = [
     note: 'optics course project, IIT Indore. team of five.',
     facts: [['course', 'optics, IIT Indore'], ['team', 'five']],
     video: 'wind-tunnel', page: true },
-
-  { id: 'eternal', year: 'oct–dec 2025', title: 'eternal', line: 'warehouse inventory robot',
-    say: 'a robot that drives through a warehouse and reads every QR code on the shelves.',
-    body: 'a jetson orin nano AMR: ROS2/Nav2, RPLidar SLAM, AMCL localisation and four-channel ultrasonic obstacle avoidance. a belt-driven Z-axis scans shelves from 200 to 1800 mm and reads every QR code, with a LoRa wireless e-stop and a hot-swappable battery.',
-    note: 'hardware & design lead. bronze medal at inter IIT tech meet 14.0, IIT Patna, among all IITs.',
-    facts: [['role', 'hardware & design lead'], ['event', 'inter IIT tech meet 14.0'], ['award', 'bronze medal']],
-    video: 'eternal', extras: ['inter-iit-award.jpg', 'inter-iit-award-1.jpg'], page: true },
 
   { id: 'mms', year: 'aug 2025 –', title: 'machine management system', line: 'RFID access control for lab machines',
     say: 'tap a card to switch on a lab machine. it runs five machines in the tinkerers’ lab.',
