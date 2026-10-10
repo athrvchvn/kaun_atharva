@@ -77,7 +77,7 @@ export const work: Project[] = [
     facts: [['role', 'hardware & design lead'], ['event', 'inter IIT tech meet 14.0'], ['award', 'bronze medal']],
     video: 'eternal', extras: ['inter-iit-award.jpg', 'inter-iit-award-1.jpg'], page: true },
 
-  { id: 'cobot', year: 'jan–feb 2026', title: 'collaborative robot', line: 'voice and glove control',
+  { id: 'cobot', year: 'jan–feb 2026', title: 'autonomous & glove-controlled collaborative robot', line: 'addverb syncro 5 · six-axis cobot',
     say: 'a robot arm you can ask to pick things up, or steer with a sensor glove.',
     body: 'two ways to drive an addverb syncro 5 six-axis cobot. say “pick up the red bottle” and an LLM extracts the intent, a depth camera sweeps the workspace, YOLO visual servoing centres the target, and the arm grasps it. or wear an ESP32 sensor glove and drive it by hand — seven gestures, classified online at ~20 Hz.',
     note: 'tinkerers’ lab, IIT Indore. team of eight. featured on addverb technologies’ official blog.',
