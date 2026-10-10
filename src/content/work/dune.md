@@ -1,58 +1,63 @@
 ## The problem
 
-A rover indoors has no GPS. Wheel odometry drifts, and it drifts worst exactly when you need it
-most — during turns, on slip, over uneven ground. Given long enough, a rover that trusts its own
-wheels will confidently tell you it is somewhere it is not.
+A robot indoors has no GPS. Wheel odometry drifts, and it drifts worst exactly when you need it —
+during turns, on slip, over uneven ground. Ultra-wideband radios fix the distance problem cheaply:
+they measure time of flight, so a range is a geometric quantity, not a signal strength that swings
+by tens of decibels over a few centimetres.
 
-DUNE is an attempt to give it an external reference that does not care about slip.
+The radio was never the hard part. The gap is everything between *a radio that reports distances*
+and *a robot that knows its pose*: per-board antenna-delay bias, non-line-of-sight ranges that come
+back too long, anchors whose positions someone has to survey, two tags that can't range at the same
+time, and no honest way to tell how good any of it is without independent ground truth. Open
+implementations mostly stop at ranging. DUNE is the rest of the pipeline.
 
-## What it does
+## What it is
 
-Ultra-wideband localization for a six-wheeled rocker-bogie rover operating in GPS-denied
-environments. Two fixed anchors, two-way ranging, trilateration.
+An open-source, end-to-end UWB localisation stack for ground robots, on commodity **DW1000**
+transceivers. Firmware, ranging protocol and channel scheduling, calibration, anchor survey,
+localisation, filtering and validation — all released, with the calibration data and logs.
 
-- **Sub-7 cm positional accuracy** inside a 2×2 m arena.
-- A **two-anchor, two-way ranging (TWR)** setup rather than the usual four-anchor grid — fewer
-  anchors to place, fewer to power, and a faster deployment.
-- **Dual-tag heading estimation.** Two tags on one chassis give orientation as well as position,
-  which a single tag cannot.
-- An **extended Kalman filter** fusing UWB ranges, wheel odometry and IMU, so the estimate stays
-  usable when ranging drops out and does not lurch when it comes back.
+One architectural rule shapes it: **tags stream only raw ranges; all localisation runs on the
+host.** Anchor geometry, calibration and estimator choice become configuration, and every run can
+be replayed offline exactly as it ran live.
 
-The result is infrastructure-independent autonomous navigation: the rover carries what it needs to
-know where it is.
+## The three ideas in it
 
-## How it is built
+- **A rigid-body moving-horizon estimator for two tags.** The rover carries two tags on a fixed
+  0.55 m baseline. Instead of filtering each tag separately and hoping the two estimates agree, a
+  single planar body pose generates both antenna positions, so the baseline is exact by
+  construction. Each range enters the 2-second window at its own timestamp — necessary, because
+  the two tags never range at the same instant. Heading falls out of the geometry.
+- **Deployment without a tape measure.** Antenna-delay calibration and an anchor *self-survey*:
+  a tag asks one anchor to range to another, giving every pairwise anchor distance, and
+  multidimensional scaling recovers the layout. No external metrology.
+- **A same-frame NLOS check.** The firmware reads total received power and first-path power from
+  the *same* received frame. Their gap is a per-measurement confidence score, used to down-weight
+  reflected ranges continuously rather than throwing them out with a hard threshold.
 
-The ranging runs on DW1000-class UWB hardware. The filter takes UWB as the absolute reference and
-odometry plus IMU as the high-rate prediction, which is the right way round — odometry is smooth
-but drifts, UWB is noisy but bounded.
+The two tags are serialised over a wired UART link, so only one radio is ever transmitting.
+Collisions are impossible by construction rather than unlikely.
 
-Getting heading out of two tags is the part that took the longest. The geometry is simple; making
-it stable when the two range estimates disagree is not.
+## How it was tested
 
-## How it was checked
+A six-wheeled rocker–bogie rover, teleoperated in a **5 × 7 m** sand arena surrounded by **five
+anchors**. Ground truth comes from an overhead Kinect tracking an AprilTag on the rover,
+registered into the anchor frame to 13.5 mm — the error floor of every number below.
 
-The video above is the validation, and it is two views of the same 66-second run.
+- **Static:** antenna-delay calibration alone leaves 199 mm RMSE. Adding the received-power
+  correction, fitted leave-one-position-out so the figure is out-of-sample, brings it to
+  **94 mm**.
+- **Driving:** **184 mm median error across 18 runs**, and 126 mm on the estimator-comparison
+  sequence — better than per-tag Kalman filtering on identical logged data.
 
-**On the left**, an overhead camera watching an AprilTag on the rover's back — ground truth,
-drawn as the yellow path.
-**On the right**, the same run as the system saw it: five anchors as green triangles, raw UWB
-ranging in grey, and the filtered position estimate in red.
-
-Both are playing at the same point in time. The grey scatter is the honest part — raw UWB is
-noisy, it disagrees with itself constantly, and the filter's job is to stay on the true path
-anyway. Comparing the red line to the yellow one is the whole result.
+The video above shows one run from both sides: the overhead camera's truth, and what the system
+saw — raw ranges in grey, the estimate in red. The grey scatter is the honest part.
 
 ## Where it went
 
-- **Submitted to IEEE** for publication.
-- Released as an **open-source library**, with the hardware implemented and tested rather than
-  simulated.
-- Built at the **Centre for Mechatronics, IIT Kanpur**, under Prof. Ashish Dutta, with Adersh M
-  as PhD mentor.
+Submitted to **IEEE Robotics and Automation Practice**, with Adersh M and Prof. Ashish Dutta.
+Built during my research internship at the **Centre for Mechatronics, IIT Kanpur**, sponsored by
+NPTEL.
 
-## What is next
-
-The rover is half the system. The other half is a drone that can land on the rover and use the
-same anchor network to find its own way. That one is not working yet.
+An earlier version of this work, with two anchors in a 2 × 2 m arena, got under 7 cm. The bigger
+arena, five anchors and an independent camera reference are what produced the numbers I trust.

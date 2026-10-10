@@ -37,5 +37,4 @@ motor and an IR break-beam, took more revisions than the access logic did.
 - **Still running** in Tinkerers' Lab, IIT Indore. It is not a demo; it is infrastructure other
   people depend on, which means it has to keep working when nobody is looking at it.
 
-It has since grown into a broader machine management system, and it is one of two projects that
-may turn into something larger.
+It has since grown into a broader machine management system. I led it, in a team of two.

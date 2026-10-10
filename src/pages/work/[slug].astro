@@ -1,172 +1,145 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { projects } from '../../data/projects';
-import { mediaFor, stillsFor } from '../../data/media';
+import { work, mediaOf, M } from '../../data/projects';
 
-// Deep write-ups live as markdown in src/content/work/<slug>.md so they can be
-// edited without touching any code. Adding a new one = drop in a file.
+// Long write-ups live in src/content/work/<id>.md. A project gets a page
+// when it has `page: true` in projects.ts and a matching markdown file.
 const pages = import.meta.glob('../../content/work/*.md', { eager: true }) as Record<
   string,
-  { Content: any; frontmatter: Record<string, any> }
+  { Content: any }
 >;
 
 export async function getStaticPaths() {
-  const { projects } = await import('../../data/projects');
-  return projects.filter((p) => p.deep).map((p) => ({ params: { slug: p.slug } }));
+  const { work } = await import('../../data/projects');
+  return work.filter((p) => p.page).map((p) => ({ params: { slug: p.id } }));
 }
 
 const { slug } = Astro.params;
-const project = projects.find((p) => p.slug === slug)!;
-const entry = Object.entries(pages).find(([path]) => path.endsWith(`/${slug}.md`))?.[1];
-const Content = entry?.Content;
+const withPages = work.filter((p) => p.page);
+const i = withPages.findIndex((p) => p.id === slug);
+const project = withPages[i];
+const prev = withPages[(i - 1 + withPages.length) % withPages.length];
+const next = withPages[(i + 1) % withPages.length];
+const Content = Object.entries(pages).find(([path]) => path.endsWith(`/${slug}.md`))?.[1]?.Content;
 
-const idx = projects.filter((p) => p.deep).findIndex((p) => p.slug === slug);
-const deep = projects.filter((p) => p.deep);
-const next = deep[(idx + 1) % deep.length];
-
-const media = mediaFor(project.slug);
-const stills = stillsFor(project.slug);
+const media = mediaOf(project);
+const hero = media[0];
+const photos = media.slice(1).filter((m) => m.kind === 'image');
+const clip = media.find((m, k) => k > 0 && m.kind === 'video');
+const ogImage = hero?.kind === 'video' ? hero.poster : hero?.src;
 ---
 
-<Base title={`${project.title} — kaun atharva?`} description={project.what}>
-  <main id="main" class="wrap page">
-    <a class="back mono" href="/work">← the work</a>
-
+<Base title={`${project.title} — atharva chavan`} description={project.say} image={ogImage}>
+  <main id="main">
     <header class="head">
-      <span class="mono yr">{project.yearLabel}</span>
-      <h1 class="display">{project.title}</h1>
-      <p class="lead">{project.what}</p>
-
-      {project.note && <p class="note">{project.note}</p>}
-
-      {project.doc && (
-        <p class="doc">
-          <a href={project.doc.href} target="_blank" rel="noopener">{project.doc.label} ↗</a>
-        </p>
-      )}
+      <a class="back" href="/#work">‹ all projects</a>
+      <p class="eyebrow">{project.year}{project.line && ` · ${project.line}`}</p>
+      <h1>{project.title}</h1>
+      <p class="say">{project.say}</p>
     </header>
 
-    {media && (
-      <figure class="hero-media">
-        {media.kind === 'video' ? (
-          <video src={media.src} poster={media.poster || undefined}
-                 muted loop playsinline preload="none" data-autoplay
-                 aria-label={`${project.title} — ${project.what}`}></video>
+    {hero && (
+      <figure class="hero">
+        {hero.kind === 'video' ? (
+          <video src={hero.src} poster={hero.poster} muted loop playsinline autoplay controls preload="metadata"
+                 aria-label={project.title}></video>
         ) : (
-          <img src={media.src} alt={`${project.title} — ${project.what}`} />
+          <img src={hero.src} alt={project.title} />
         )}
-        {project.mediaNote && <figcaption class="mono">{project.mediaNote}</figcaption>}
+        {project.caption && hero.src === M + project.img && <figcaption>{project.caption}</figcaption>}
       </figure>
     )}
 
-    {stills.length > 0 && (
-      <div class="gallery" data-gallery={JSON.stringify(stills)}>
-        {stills.map((s, i) => (
-          <button data-index={i} aria-label={`Photo ${i + 1} of ${stills.length}`}>
-            <img src={s} alt="" loading="lazy" decoding="async" />
-          </button>
-        ))}
+    <section class="summary">
+      <div class="summary-text">
+        {project.quote && <p class="quote">“{project.quote}”</p>}
+        <p class="body">{project.body}</p>
+        {project.deck && (
+          <p class="deck"><a href={project.deck.href} target="_blank" rel="noopener">{project.deck.label} ↗</a></p>
+        )}
       </div>
+      {project.facts && (
+        <dl class="facts">
+          {project.facts.map(([k, v]) => (
+            <div><dt>{k}</dt><dd>{v}</dd></div>
+          ))}
+        </dl>
+      )}
+    </section>
+
+    {photos.length > 0 && (
+      <section class="photos" aria-label="photos">
+        {photos.map((m) => (
+          <a href={m.src} target="_blank" rel="noopener"><img src={m.src} alt="" loading="lazy" decoding="async" /></a>
+        ))}
+      </section>
     )}
 
-    {Content ? (
-      <article class="prose long"><Content /></article>
-    ) : (
-      <p class="pending mono">the write-up for this one is still being written.</p>
+    {Content && (
+      <article class="long" data-reveal>
+        <Content />
+      </article>
     )}
 
-    <nav class="next">
-      <a href={`/work/${next.slug}`}>
-        <span class="mono">next</span>
-        <span class="display">{next.title} →</span>
-      </a>
+    {clip && (
+      <figure class="hero tail">
+        <video src={clip.src} poster={clip.poster} muted loop playsinline controls preload="none" aria-label={`${project.title}, video`}></video>
+      </figure>
+    )}
+
+    <nav class="pager" aria-label="more projects">
+      <a href={`/work/${prev.id}`}><span>previous</span>‹ {prev.title}</a>
+      <a href={`/work/${next.id}`} class="r"><span>next</span>{next.title} ›</a>
     </nav>
   </main>
 </Base>
 
 <style>
-  .page { padding-block: clamp(2.5rem, 8vh, 5rem) 6rem; max-width: 52rem; }
-  .back { color: var(--steel); }
-  .back:hover { color: var(--brass); }
+  main { background: var(--bg); padding-bottom: clamp(48px, 8vw, 96px); }
+  .head { max-width: 980px; margin: 0 auto; padding: clamp(40px, 7vw, 88px) 24px clamp(28px, 4vw, 44px); }
+  .back { display: inline-block; font-size: 15px; margin-bottom: clamp(24px, 4vw, 40px); }
+  .eyebrow { margin: 0 0 10px; font-size: 17px; font-weight: 600; color: var(--ink2); }
+  h1 { margin: 0 0 18px; font-size: clamp(44px, 7vw, 88px); line-height: 1; font-weight: 700; letter-spacing: -0.045em; }
+  .say { margin: 0; max-width: 30em; font-size: clamp(20px, 2.2vw, 26px); line-height: 1.35; font-weight: 500; letter-spacing: -0.015em; color: var(--ink2); text-wrap: balance; }
 
-  .head { margin: 2.5rem 0 3rem; display: grid; gap: 1rem; }
-  .head .yr { color: var(--brass); }
-  .head h1 { font-size: var(--t-act); }
+  .hero { max-width: 1100px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 24px); }
+  .hero video, .hero img { display: block; width: 100%; max-height: 78vh; object-fit: contain; background: #000; border-radius: clamp(18px, 3vw, 30px); }
+  .hero figcaption { margin-top: 12px; font-size: 14px; color: var(--ink2); text-align: center; }
+  .hero.tail { margin-top: clamp(40px, 6vw, 72px); max-width: 980px; }
 
-  .doc { font-size: var(--t-small); }
-  .doc a { color: var(--bone-dim); border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
-  .doc a:hover { color: var(--brass); border-color: var(--brass); }
-  .meta { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .meta li {
-    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
-    text-transform: uppercase; padding: 0.25rem 0.55rem;
-    border: 1px solid var(--hairline-2); color: var(--steel);
-  }
-  .meta .out { color: var(--brass); border-color: var(--brass); }
+  .summary { max-width: 980px; margin: 0 auto; padding: clamp(40px, 6vw, 72px) 24px 0; display: grid; gap: clamp(28px, 5vw, 64px); grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 760px) { .summary { grid-template-columns: 1fr; } }
+  .quote { margin: 0 0 18px; font-size: 24px; line-height: 1.3; font-weight: 600; letter-spacing: -0.02em; }
+  .body { margin: 0; font-size: clamp(18px, 1.9vw, 21px); line-height: 1.5; text-wrap: pretty; }
+  .body::first-letter { text-transform: uppercase; }
+  .deck { margin: 18px 0 0; font-size: 17px; }
+  .facts { margin: 0; background: var(--bg2); border-radius: 22px; padding: 6px 22px; }
+  .facts div { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .facts div:last-child { border-bottom: 0; }
+  .facts dt { font-size: 12px; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+  .facts dd { margin: 0; font-size: 16px; line-height: 1.4; }
 
-  .note {
-    font-size: var(--t-small); color: var(--bone-dim);
-    border-left: 2px solid var(--brass); padding-left: 1rem;
-  }
+  .photos { max-width: 980px; margin: clamp(40px, 6vw, 64px) auto 0; padding: 0 24px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+  .photos a { display: block; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; background: var(--chip); }
+  .photos img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s var(--ease); }
+  .photos a:hover img { transform: scale(1.03); }
 
-  .hero-media { margin: 0 0 2rem; }
-  /* natural shape, capped — a fixed 16/9 padded every portrait clip with bars */
-  .hero-media video, .hero-media img {
-    display: block;
-    width: auto; height: auto;
-    max-width: 100%; max-height: 74svh;
-    margin-inline: auto;
-  }
-  .hero-media figcaption {
-    padding-top: 0.7rem; color: var(--steel-dim);
-    text-transform: none; letter-spacing: 0.02em;
-  }
+  .long { max-width: 692px; margin: clamp(56px, 8vw, 96px) auto 0; padding: 0 24px; font-size: 19px; line-height: 1.6; }
+  .long :global(h2) { margin: 2.4em 0 .6em; font-size: clamp(26px, 3vw, 32px); line-height: 1.15; font-weight: 700; letter-spacing: -0.03em; }
+  .long :global(h2:first-child) { margin-top: 0; }
+  .long :global(p) { margin: 0 0 1.1em; }
+  .long :global(ul), .long :global(ol) { margin: 0 0 1.2em; padding-left: 1.3em; }
+  .long :global(li) { margin-bottom: .45em; }
+  .long :global(strong) { font-weight: 600; }
+  .long :global(code) { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .86em; background: var(--bg2); padding: .12em .4em; border-radius: 6px; }
+  .long :global(blockquote) { margin: 0 0 1.2em; padding-left: 1em; border-left: 3px solid var(--line); color: var(--ink2); }
+  .long :global(table) { width: 100%; border-collapse: collapse; margin: 0 0 1.4em; font-size: 16px; }
+  .long :global(th), .long :global(td) { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .long :global(figure.vid) { margin: 2em 0; }
+  .long :global(figure.vid video) { width: 100%; border-radius: 18px; background: #000; display: block; }
 
-  .gallery {
-    display: grid; gap: 0.5rem; margin-bottom: 3rem;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr));
-  }
-  .gallery button {
-    padding: 0; border: 1px solid var(--hairline); background: var(--ink-1);
-    cursor: pointer; line-height: 0; overflow: hidden;
-    transition: border-color 0.2s var(--ease);
-  }
-  .gallery img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: opacity 0.2s var(--ease); }
-  .gallery button:hover { border-color: var(--brass); }
-  .gallery button:hover img { opacity: 0.82; }
-
-  .long { max-width: 38rem; }
-  .long :global(h2) {
-    font-family: var(--display); font-weight: 700; font-size: 1.25rem;
-    letter-spacing: -0.01em; margin: 2.75rem 0 0.85rem;
-  }
-  .long :global(p) { margin-bottom: 1.1em; }
-  .long :global(ul) { margin: 0 0 1.25em 1.1rem; display: grid; gap: 0.4rem; }
-  .long :global(li) { color: var(--bone-dim); }
-  .long :global(strong) { color: var(--bone); font-weight: 700; }
-  .long :global(code) {
-    font-family: var(--mono); font-size: 0.875em;
-    background: var(--ink-1); border: 1px solid var(--hairline);
-    padding: 0.1em 0.35em;
-  }
-  .long :global(hr) { border: 0; border-top: 1px solid var(--hairline); margin: 2.5rem 0; }
-  .long :global(figure.vid) { margin: 2rem 0 2.5rem; }
-  .long :global(figure.vid video) {
-    width: 100%; background: var(--ink-1); border: 1px solid var(--hairline);
-  }
-  .long :global(figure.vid figcaption) {
-    font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--steel-dim); padding-top: 0.7rem;
-  }
-  .long :global(blockquote) {
-    border-left: 2px solid var(--hairline-2); padding-left: 1rem;
-    color: var(--steel); font-style: italic; margin-bottom: 1.25em;
-  }
-
-  .pending { color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
-
-  .next { margin-top: 5rem; border-top: 1px solid var(--hairline); padding-top: 2rem; }
-  .next a { display: grid; gap: 0.4rem; }
-  .next .display { font-size: 1.35rem; }
-  .next a:hover .display { color: var(--brass); }
+  .pager { max-width: 980px; margin: clamp(56px, 8vw, 96px) auto 0; padding: 24px 24px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 24px; }
+  .pager a { display: flex; flex-direction: column; gap: 4px; font-size: 19px; font-weight: 600; min-width: 0; }
+  .pager span { font-size: 13px; font-weight: 600; color: var(--ink2); }
+  .pager .r { text-align: right; align-items: flex-end; }
 </style>

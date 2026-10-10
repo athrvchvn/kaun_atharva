@@ -1,97 +1,49 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { projects } from '../../data/projects';
-import { mediaFor } from '../../data/media';
+import { work, M } from '../../data/projects';
 
-const sorted = [...projects].sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
+const isSide = (f: string) => /award|intern/.test(f);
 ---
 
-<Base
-  title="the work — kaun atharva?"
-  description="Every project Atharva Chavan has built, 2018 to now. Including the ones that failed."
->
-  <main id="main" class="wrap page">
+<Base title="projects — atharva chavan" description="Everything Atharva Chavan has worked on since 2024, newest first.">
+  <main id="main">
     <header class="head">
-      <a class="back mono" href="/">← the story</a>
-      <h1 class="display">the work</h1>
-      <p class="lead dim">
-        everything, in order, from a dustbin lid at eleven to a rover that does not know where it is yet.
-        the ones that failed are in here too.
-      </p>
+      <h1>projects</h1>
+      <p>what i’ve worked on since 2024, newest first. almost all of it in college labs, with friends.</p>
     </header>
-
-    <ol class="list">
-      {sorted.map((p) => (
-        <li class="row">
-          <span class="yr mono">{p.yearLabel}</span>
-          <div class="thumb">
-            {(() => {
-              const m = mediaFor(p.slug);
-              if (!m) return <div class="thumb-empty" aria-hidden="true"></div>;
-              const src = m.kind === 'video' ? (m.poster || '') : m.src;
-              return src
-                ? <img src={src} alt="" loading="lazy" decoding="async" />
-                : <div class="thumb-empty" aria-hidden="true"></div>;
-            })()}
-          </div>
-          <div class="body">
-            <h2>
-              {p.deep
-                ? <a href={`/work/${p.slug}`}>{p.title} <span class="arrow">→</span></a>
-                : p.title}
-            </h2>
-            {p.problem && <p class="problem">{p.problem}</p>}
-            <p class="what cold">{p.what}</p>
-            {p.note && <p class="note mono">{p.note}</p>}
-          </div>
-        </li>
-      ))}
-    </ol>
-
-    <p class="foot mono">
-      {projects.filter((p) => !p.deep).length} of these do not have their own page yet.
-      they are being written.
-    </p>
+    <div class="grid">
+      {work.map((p) => {
+        const src = M + (p.img || p.extras?.find((f) => !isSide(f)) || `${p.video}.jpg`);
+        const inner = (
+          <>
+            <div class="media"><img src={src} alt="" loading="lazy" decoding="async" /></div>
+            <div class="text">
+              <span class="yr">{p.year}</span>
+              <span class="t">{p.title}</span>
+              <span class="s">{p.say}</span>
+            </div>
+          </>
+        );
+        return p.page
+          ? <a class="item" href={`/work/${p.id}`}>{inner}</a>
+          : <a class="item" href={`/#p=${p.id}`}>{inner}</a>;
+      })}
+    </div>
   </main>
 </Base>
 
 <style>
-  .page { padding-block: clamp(3rem, 10vh, 6rem) 6rem; }
-  .head { margin-bottom: 3rem; display: grid; gap: 1rem; max-width: 46rem; }
-  .back { color: var(--steel); }
-  .back:hover { color: var(--brass); }
-  .head h1 { font-size: var(--t-act); }
-
-
-  .list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--hairline); }
-  .row {
-    display: grid; gap: 0.5rem 1.5rem; padding: 1.6rem 0;
-    border-bottom: 1px solid var(--hairline);
-    grid-template-columns: 1fr;
-  }
-  @media (min-width: 48rem) {
-    .row { grid-template-columns: 5.5rem 7rem minmax(0, 1fr); align-items: start; }
-  }
-  .thumb { line-height: 0; }
-  .thumb img, .thumb-empty {
-    width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
-    border: 1px solid var(--hairline); background: var(--ink-1);
-  }
-  .thumb-empty {
-    background: repeating-linear-gradient(45deg, transparent 0 7px, rgba(255,255,255,.02) 7px 14px), var(--ink-1);
-  }
-  @media (max-width: 47.99rem) { .thumb { max-width: 9rem; } }
-  .yr { color: var(--steel-dim); padding-top: 0.25rem; }
-  .body { display: grid; gap: 0.4rem; }
-  .body h2 { font-family: var(--display); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
-  .body h2 a { border-bottom: 1px solid var(--hairline-2); }
-  .body h2 a:hover { color: var(--brass); border-color: var(--brass); }
-  .arrow { color: var(--brass); }
-  .problem { color: var(--bone); font-style: italic; }
-  .what { font-size: var(--t-small); line-height: 1.6; }
-  .note { text-transform: none; letter-spacing: 0.02em; color: var(--steel-dim); line-height: 1.5; }
-
-
-  .foot { margin-top: 2.5rem; color: var(--steel-dim); text-transform: none; letter-spacing: 0.02em; }
+  main { background: var(--bg2); padding: clamp(56px, 8vw, 100px) 24px clamp(64px, 8vw, 110px); }
+  .head { max-width: 1100px; margin: 0 auto 40px; }
+  h1 { margin: 0 0 12px; font-size: clamp(40px, 6vw, 72px); line-height: 1.02; font-weight: 700; letter-spacing: -0.04em; }
+  .head p { margin: 0; max-width: 34em; font-size: clamp(18px, 1.8vw, 21px); line-height: 1.45; color: var(--ink2); }
+  .grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
+  .item { background: var(--card); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; color: inherit; transition: transform .45s var(--ease), box-shadow .45s; }
+  .item:hover { text-decoration: none; transform: translateY(-4px); box-shadow: 0 18px 50px rgba(0,0,0,.12); }
+  .media { aspect-ratio: 16 / 10; background: var(--chip); overflow: hidden; }
+  .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .text { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 4px; }
+  .yr { font-size: 12px; font-weight: 600; color: var(--ink2); }
+  .t { font-size: 18px; line-height: 1.25; font-weight: 600; color: var(--ink); }
+  .s { font-size: 14px; line-height: 1.45; color: var(--ink2); }
 </style>
-

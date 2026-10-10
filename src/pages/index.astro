@@ -1,428 +1,532 @@
 ---
 import Base from '../layouts/Base.astro';
-import YearRail from '../components/YearRail.astro';
-import ProjectBeat from '../components/ProjectBeat.astro';
-import ActHead from '../components/ActHead.astro';
-import ScrollScrub from '../components/ScrollScrub.astro';
-import MagneticTitle from '../components/MagneticTitle.astro';
-import StickyBoard from '../components/StickyBoard.astro';
-import { projects } from '../data/projects';
-import { mediaFor, hasMontage } from '../data/media';
+import { work, early, all, M, mediaOf, type Project } from '../data/projects';
 
-const montage = hasMontage();
+// Award and internship photos belong on the project page, not on the cover.
+const isSide = (f: string) => /award|intern/.test(f);
+const cover = (p: Project) =>
+  M + (p.img || p.extras?.find((f) => !isSide(f)) || `${p.video}.jpg`);
+const hover = (p: Project) => (p.video && !p.badVideo ? `${M}${p.video}.mp4` : '');
 
-const act = (n: number) => projects.filter((p) => p.act === n);
+const dustbin = early[0];
+const after = early.slice(1);
 
-const childhood = act(1);
-const dustbin = childhood.find((p) => p.slug === 'smart-dustbin');
-const dustbinMedia = dustbin ? mediaFor(dustbin.slug) : null;
-const otherChildhood = childhood
-  .filter((p) => p.slug !== 'smart-dustbin')
-  .map((p) => ({ ...p, m: mediaFor(p.slug) }));
+// Two rows of photos for the wall above "say hi".
+const pics: { id: string; src: string }[] = [];
+all.forEach((p) => {
+  [p.img, ...(p.extras || [])]
+    .filter((f): f is string => !!f && !isSide(f))
+    .slice(0, 2)
+    .forEach((f) => pics.push({ id: p.id, src: M + f }));
+});
+const rowA = pics.filter((_, i) => i % 2 === 0);
+const rowB = pics.filter((_, i) => i % 2 === 1);
 
-const people = {
-  'the first door': [['Harshit Chandak', 'childhood friend — showed me electronics']],
-  family: [['My father', 'the furniture workshop'], ['My mama', 'the garage, and the welding']],
-  professors: [
-    ['Prof. I.A. Palani', 'Mechatronics Lab, IIT Indore'],
-    ['Prof. Ashish Dutta', 'Centre for Mechatronics, IIT Kanpur'],
-    ['Prof. Abhirup Datta', 'STARC Lab / Dean R&D, IIT Indore'],
-  ],
-  'mentors & seniors': [
-    ['Adersh M', 'IIT Kanpur'], ['Rajat Vishwakarma', 'IIT Indore'],
-    ['Hrishikesh Jawale', 'IIT Indore'], ['Anand Nambiar', 'IIT Indore'],
-    ['Tejas Bhavekar', 'IIT Indore'],
-  ],
-  'the mechatronics lab': [
-    ['Diksha Jaurker', 'PhD, Mechatronics Lab'],
-    ['Anshu Sahu', 'now Professor, SRM University'],
-    ['Arpit Singh', 'now postdoc, Dalhousie University'],
-  ],
-};
+// Everything the quick-look sheet needs, handed to the client as JSON.
+const sheet = Object.fromEntries(
+  all.map((p) => [
+    p.id,
+    {
+      title: p.title,
+      eyebrow: p.year + (p.line ? ' · ' + p.line : ''),
+      say: p.say,
+      quote: p.quote || '',
+      body: p.body,
+      note: p.note || '',
+      caption: p.caption || '',
+      media: mediaOf(p),
+      link: p.page ? `/work/${p.id}` : '',
+      deck: p.deck || null,
+    },
+  ]),
+);
+const groups = { work: work.map((p) => p.id), early: early.map((p) => p.id) };
+const json = JSON.stringify({ sheet, groups }).replace(/</g, '\\u003c');
 ---
 
 <Base>
-  <YearRail />
-
   <main id="main">
-    <!-- ══════════ 1. THE MONTAGE ══════════
-         Atharva's call, and the right one: the work goes first. -->
-    <section class:list={['hero', { bare: !montage }]}>
-      {montage && (
-        <div class="reel">
-          <video
-            src="/media/montage.mp4" poster="/media/montage.jpg"
-            muted loop playsinline preload="metadata" autoplay
-            aria-label="Ten years of projects, cut together"
-          ></video>
-          <div class="reel-veil" aria-hidden="true"></div>
+    <!-- ══ the film: a frame that opens up as you scroll ══ -->
+    <section class="film" data-film-hero>
+      <div class="film-stick">
+        <div class="film-title">
+          <h1 class="hi"><span>hi,</span> <span>i’m</span> <span>atharva.</span></h1>
+          <p class="hi sub"><span>i study mechanical engineering at IIT Indore and like building small machines. this is how it started.</span></p>
         </div>
-      )}
-
-      <div class="hero-copy wrap">
-        <MagneticTitle text="kaun atharva?" />
-
-        {!montage && (
-          <div class="thesis">
-            <!-- the site's argument, as two readings ten years apart -->
-            <dl>
-              <div class="then">
-                <dt class="mono">2018 · ultrasonic sensor, dustbin lid</dt>
-                <dd class="display">≈ 24 cm</dd>
-              </div>
-              <div class="arrow mono" aria-hidden="true">
-                <span>ten years</span>
-                <i></i>
-              </div>
-              <div class="now">
-                <dt class="mono">2026 · uwb + imu + odometry, fused</dt>
-                <dd class="display">&lt; 7 cm</dd>
-              </div>
-            </dl>
+        <div class="film-clip" data-film-clip data-film-go>
+          <video src="/media/act0-film.mp4" muted loop playsinline preload="auto" autoplay data-film
+                 aria-label="how it started: the workshop, a welded chair, a friend's desk, and a dustbin"></video>
+          <div class="film-shade" aria-hidden="true"></div>
+          <div class="film-cue" aria-hidden="true">
+            <span><span class="nudge">↓</span>scroll to watch the story</span>
           </div>
-        )}
-
-        <p class="mono cue">↓ ten years, in order</p>
-      </div>
-    </section>
-
-    <!-- ══════════ 2. ACT 0 — THE WORKSHOPS ══════════ HINGE -->
-    <section class="act tight" id="act-0">
-      <div class="wrap">
-        <ActHead id="act-0" num="00" years="2018" title="the workshops" />
-        <div class="prose hinge" data-reveal>
-          <p>my father owns a furniture workshop. i went there to learn, and got fast enough to be useful to him.</p>
-          <p>my mama has a garage. that is where the metal was, and the welding.</p>
-        </div>
-        <div class="prose" data-reveal>
-          <p>at 12 i wanted an office chair. my father would not buy me one. so i pulled a broken one out of scrap and welded it back together.</p>
-          <p class="beat-line">it broke a few months later.</p>
-          <p>at 13 he was fitting out a house. i built the study table for it.</p>
-        </div>
-        <p class="aside mono" data-reveal>no photograph of either one survives</p>
-      </div>
-    </section>
-
-    <ScrollScrub id="t-0-1" label="and then someone showed me electronics" />
-
-    <!-- ══════════ 3. ACT I — CHILDHOOD, COMPRESSED ══════════
-         Deliberately tight. A decade of real work should outweigh this. -->
-    <section class="act tight" id="act-1">
-      <div class="wrap">
-        <ActHead id="act-1" num="01" years="2018 — 2022" title="and then the sky" />
-
-        <div class="prose hinge" data-reveal>
-          <p>harshit chandak showed me electronics. we are still friends.</p>
-        </div>
-        <div class="prose" data-reveal>
-          <p>i watched videos and tried to copy them with the parts i had, which was never the parts they had.</p>
-        </div>
-
-        {dustbin && (
-          <figure class="first" data-reveal>
-            {dustbinMedia?.kind === 'video' && (
-              <video src={dustbinMedia.src} poster={dustbinMedia.poster || undefined}
-                     muted loop playsinline preload="none" data-autoplay
-                     aria-label="The smart dustbin, 2018"></video>
-            )}
-            {dustbinMedia?.kind === 'image' && (
-              <img src={dustbinMedia.src} alt="The smart dustbin, 2018" loading="lazy" />
-            )}
-            {!dustbinMedia && <div class="empty"><span class="mono">footage pending</span></div>}
-            <figcaption>
-              <span class="mono">2018 · age 11 · the first one</span>
-              <p>an ultrasonic sensor, a servo, and a dustbin lid.</p>
-              <span class="mono meas">distance ≈ 24 cm</span>
-            </figcaption>
-          </figure>
-        )}
-
-        <ul class="tiles" data-reveal>
-          {otherChildhood.map((p) => (
-            <li>
-              {p.m?.kind === 'video' && (
-                <video src={p.m.src} poster={p.m.poster || undefined}
-                       muted loop playsinline preload="none" data-autoplay
-                       aria-label={p.title}></video>
-              )}
-              {p.m?.kind === 'image' && <img src={p.m.src} alt={p.title} loading="lazy" />}
-              {!p.m && <div class="empty sm"></div>}
-              <span class="mono">{p.yearLabel}</span>
-              <h3>{p.title}</h3>
-              {p.problem && <p class="tile-note">{p.problem}</p>}
-            </li>
-          ))}
-        </ul>
-
-        <div class="prose" data-reveal>
-          <p><span class="mono inline">2021</span> a school bag that redistributes its own load. inspire award manak, government of india. ₹10,000.</p>
-          <p class="beat-line">my parents were there.</p>
+          <div class="film-cap">
+            <div class="cap-wrap"><p data-cap aria-live="polite">my dad has a furniture workshop. i used to go there just to watch.</p></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <ScrollScrub id="t-1-2" label="then i stopped" />
-
-    <!-- ══════════ 4. ACT II — THE SILENCE ══════════ -->
-    <section class="act silence" id="act-2">
-      <div class="wrap">
-        <ActHead id="act-2" num="02" years="2022 — 2024" title="the silence" />
-        <div class="prose" data-reveal>
-          <p>two years. i built nothing.</p>
-        </div>
-        <div class="prose" data-reveal>
-          <p class="dim">my preference list had mechanical and electrical on it. nothing else.</p>
-        </div>
-      </div>
-    </section>
-
-    <ScrollScrub id="t-2-3" label="day three. classes had not started." />
-
-    <!-- ══════════ 5. ACT III — THE CAPACITOR ══════════ HINGE -->
-    <section class="act" id="act-3">
-      <div class="wrap">
-        <ActHead id="act-3" num="03" years="2024" title="the capacitor" />
-        <div class="prose" data-reveal>
-          <p>at iit indore. i emailed prof. i.a. palani and asked if i could see his lab. he said yes.</p>
-          <p>that same day a machine had a faulty capacitor. someone asked if i could replace it.</p>
-        </div>
-        <div class="prose hinge" data-reveal>
-          <p>i could. i had been doing that kind of work since i was twelve.</p>
-          <p class="beat-line">i have had a key to that lab ever since.</p>
-        </div>
-        <div class="prose" data-reveal>
-          <p class="dim">24/7 access. a place to sit. we still go to dinners together.</p>
-        </div>
+    <!-- ══ projects reel ══ -->
+    <section id="work" class="work">
+      <div class="work-head" data-reveal>
+        <h2>projects</h2>
+        <p>what i’ve worked on since 2024, newest first. almost all of it in college labs, with friends.</p>
       </div>
 
-      <div class="wrap beats">
-          {act(3).map((p, i) => <ProjectBeat project={p} index={i} />)}
-      </div>
-    </section>
-
-    <ScrollScrub id="t-3-4" label="2024 — 2026 · then it got fast" />
-
-    <!-- ══════════ 6. ACT IV — the bulk of the site ══════════
-         No ActHead here on purpose: the passage above carries both the years
-         and the line, so a section title underneath was pure repetition and
-         extra scroll. The projects start immediately. -->
-    <section class="act" id="act-4">
-      <div class="wrap beats">
-        {act(4).map((p, i) => <ProjectBeat project={p} index={i} />)}
-      </div>
-    </section>
-
-    <ScrollScrub id="t-4-5" label="and now" />
-
-    <!-- ══════════ 7. ACT V — THE OPEN QUESTION ══════════ -->
-    <section class="act" id="act-5">
-      <div class="wrap">
-        <ActHead id="act-5" num="05" years="now" title="the open question" />
+      <div class="reel" data-reel>
+        {work.map((p) => (
+          <button class="card" data-card data-open={p.id} aria-label={p.title}>
+            <img src={cover(p)} alt="" loading="lazy" decoding="async" />
+            {hover(p) && <video data-hv={hover(p)} muted loop playsinline preload="none"></video>}
+          </button>
+        ))}
       </div>
 
-      <div class="wrap beats">
-        {act(5).map((p, i) => <ProjectBeat project={p} index={i} />)}
-      </div>
-
-      <div class="wrap closing">
-        <div class="prose" data-reveal>
-          <p>right now: aqualoop, the machine management system, and a rover that can land a drone on itself and find its own way, all on uwb.</p>
-          <p class="beat-line">that last one is not working yet.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════ 9. THE PEOPLE ══════════
-         Folded away by default. The gratitude is real, but fifteen names is a
-         lot of mandatory scroll for someone who came to see the work — so it
-         opens for whoever actually wants it. -->
-    <section class="act people" id="people">
-      <div class="wrap">
-        <details class="who" data-reveal>
-          <summary>
-            <span class="hinge">none of it was only me.</span>
-            <span class="mono cue">see who ↓</span>
-          </summary>
-          <div class="credits">
-            {Object.entries(people).map(([group, list]) => (
-              <div class="credit-group">
-                <h3 class="mono">{group}</h3>
-                <ul>
-                  {list.map(([name, role]) => (
-                    <li><span class="nm">{name}</span><span class="rl cold">{role}</span></li>
-                  ))}
-                </ul>
+      <div class="reel-foot">
+        <div class="reel-row">
+          <div class="captions">
+            {work.map((p, i) => (
+              <div class="cap" data-rc={i}>
+                <span class="cap-year">{p.year}</span>
+                <h3>{p.title}</h3>
+                <p>{p.say}</p>
+                <button class="more" data-open={p.id}>how it works ›</button>
               </div>
             ))}
           </div>
-        </details>
+          <div class="steps">
+            <button class="step" data-step="-1" aria-label="previous project">‹</button>
+            <button class="step" data-step="1" aria-label="next project">›</button>
+          </div>
+        </div>
+        <div class="index">
+          {work.map((p, i) => <button data-go={i}>{p.title}</button>)}
+        </div>
       </div>
     </section>
 
-    <StickyBoard />
+    <!-- ══ the first ones ══ -->
+    <section id="story" class="story">
+      <div class="story-in">
+        <div class="story-head" data-reveal>
+          <p class="kicker">2018 — 2022</p>
+          <h2>the first ones.</h2>
+          <p>an arduino, a breadboard, and a bag of parts i did not understand yet.</p>
+          <p>i watched videos and tried to copy them with the parts i had, which was never the parts they had.</p>
+        </div>
 
-    <!-- ══════════ 10. CONTACT ══════════ -->
-    <footer class="act contact" id="contact">
-      <div class="wrap">
-        <h2 class="display" data-reveal>atharva chavan</h2>
-        <p class="prose dim" data-reveal>mechanical engineering, iit indore.</p>
-        <ul class="links" data-reveal>
-          <li><a href="mailto:atharvachavan346@gmail.com">atharvachavan346@gmail.com</a></li>
-          <li><a href="tel:+919309147663">+91 93091 47663</a></li>
-          <li><a href="https://github.com/athrvchvn" rel="me noopener">github</a></li>
-          <li><a href="https://www.linkedin.com/in/athrvchavan" rel="me noopener">linkedin</a></li>
-          <li><a href="/work">all the work →</a></li>
-        </ul>
+        <button class="first" data-reveal data-early data-open={dustbin.id} aria-label={dustbin.title}>
+          <div class="first-media">
+            <video src={`${M}${dustbin.video}.mp4`} poster={`${M}${dustbin.video}.jpg`} muted loop playsinline preload="none"></video>
+          </div>
+          <div class="first-text">
+            <span class="kicker sm">2018 · i was eleven</span>
+            <span class="first-title">smart dustbin</span>
+            <span class="first-body">an ultrasonic sensor, a servo and a dustbin lid. walk up to it and the lid opens. the first thing i ever built.</span>
+          </div>
+        </button>
+
+        <p class="kicker after" data-reveal>after that</p>
+        <div class="early">
+          {after.map((p) => (
+            <button class="ecard" data-reveal data-early data-open={p.id} aria-label={p.title}>
+              <div class="ecard-media">
+                <video src={`${M}${p.video}.mp4`} poster={`${M}${p.video}.jpg`} muted loop playsinline preload="none"></video>
+              </div>
+              <div class="ecard-text">
+                <span class="ecard-year">{p.year.replace('~', 'around ')}</span>
+                <span class="ecard-title">{p.title}</span>
+                <span class="ecard-body">{p.say}</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
-    </footer>
+    </section>
+
+    <!-- ══ contact ══ -->
+    <section id="contact" class="contact">
+      <div class="wall" aria-hidden="true" data-reel-wall>
+        {[rowA, rowB].map((row, r) => (
+          <div class:list={['wall-row', { rev: r === 1 }]}>
+            {[...row, ...row].map((w) => (
+              <button tabindex="-1" data-open={w.id}><img src={w.src} alt="" loading="lazy" decoding="async" /></button>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div class="contact-in">
+        <h2 data-reveal>say hi.</h2>
+        <p data-reveal>if you’d like to talk about any of this, email is the easiest way to reach me.</p>
+        <a data-reveal class="mail" href="mailto:atharvachavan346@gmail.com">atharvachavan346@gmail.com</a>
+        <div data-reveal class="pills center">
+          <a class="pill" href="tel:+919309147663">+91 93091 47663</a>
+          <a class="pill" href="https://github.com/athrvchvn" rel="noopener">github ↗</a>
+          <a class="pill" href="https://www.linkedin.com/in/athrvchavan" rel="noopener">linkedin ↗</a>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <!-- quick-look sheet, filled by the script below -->
+  <div class="backdrop" id="sheet" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+      <button class="sh-close" data-close aria-label="close">✕</button>
+      <div class="sh-stage" id="sh-stage"></div>
+      <div class="sh-thumbs" id="sh-thumbs"></div>
+      <div class="sh-body">
+        <span class="sh-eyebrow" id="sh-eyebrow"></span>
+        <h3 id="sh-title"></h3>
+        <p class="sh-say" id="sh-say"></p>
+        <p class="sh-quote" id="sh-quote"></p>
+        <p class="sh-text" id="sh-text"></p>
+        <p class="sh-note" id="sh-note"></p>
+        <div class="sh-links" id="sh-links"></div>
+      </div>
+      <div class="sh-nav">
+        <button data-prev id="sh-prev"></button>
+        <button data-next id="sh-next"></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="ka-data" set:html={json} />
+
+  <script is:inline>
+  (function () {
+    var DATA = JSON.parse(document.getElementById('ka-data').textContent);
+    var $ = function (s, r) { return (r || document).querySelector(s); };
+    var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var play = function (v) { if (!v) return; v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () {}); };
+
+    // ── the film ──────────────────────────────────────────────
+    var hero = $('[data-film-hero]'), clip = $('[data-film-clip]'), film = $('[data-film]'), cap = $('[data-cap]');
+    function fh() {
+      var r = hero.getBoundingClientRect(), span = Math.max(1, r.height - innerHeight);
+      var raw = Math.max(0, Math.min(1, -r.top / span)), p = Math.min(1, raw / 0.62);
+      p = p * p * (3 - 2 * p);
+      hero.style.setProperty('--p', p.toFixed(4));
+      var vw = innerWidth, vh = innerHeight;
+      var side = Math.max(20, vw / 2 - 560) * (1 - p), top = (vh * 0.5 + 10) * (1 - p), bot = vh * 0.05 * (1 - p), rad = 30 * (1 - p);
+      var v = 'inset(' + top.toFixed(1) + 'px ' + side.toFixed(1) + 'px ' + bot.toFixed(1) + 'px ' + side.toFixed(1) + 'px round ' + rad.toFixed(1) + 'px)';
+      clip.style.clipPath = v; clip.style.webkitClipPath = v;
+    }
+    var ticking = false;
+    addEventListener('scroll', function () { if (ticking) return; ticking = true; requestAnimationFrame(function () { ticking = false; fh(); }); }, { passive: true });
+    addEventListener('resize', fh); fh();
+    clip.addEventListener('click', function () {
+      var r = hero.getBoundingClientRect(); if (r.top < -10) return;
+      scrollTo({ top: scrollY + r.top + (r.height - innerHeight) * 0.66, behavior: 'smooth' });
+    });
+
+    var START = 10.2;
+    var CAPS = [
+      [0, 'my dad has a furniture workshop. i used to go there just to watch.'],
+      [15.5, 'one day i wanted a chair. there was a broken one lying around.'],
+      [21.5, 'my uncle showed me how to weld it back together.'],
+      [25, 'it held for a few months. then it broke again. i never fixed it.'],
+      [33.5, 'so i cycled to a friend’s house instead.'],
+      [39.5, 'he was building something at his desk. he didn’t explain much. i just watched.'],
+      [46, 'then i went home and tried one on my own.'],
+      [49.5, 'a dustbin that opens when you walk up to it. i was eleven.'],
+    ];
+    var capI = 0;
+    film.muted = true;
+    film.addEventListener('loadedmetadata', function () { if (film.currentTime < START) film.currentTime = START; });
+    film.addEventListener('timeupdate', function () {
+      if (film.currentTime < START - 0.3) { film.currentTime = START; return; }
+      if (film.currentTime >= START) film.classList.add('on');
+      var i = 0; for (var k = 0; k < CAPS.length; k++) if (film.currentTime >= CAPS[k][0]) i = k;
+      if (i === capI) return; capI = i;
+      cap.style.opacity = '0'; cap.style.transform = 'translateY(8px)';
+      setTimeout(function () { cap.textContent = CAPS[i][1]; cap.style.opacity = '1'; cap.style.transform = 'none'; }, 500);
+    });
+    if (film.readyState >= 1 && film.currentTime < START) film.currentTime = START;
+    if (!reduce) play(film);
+
+    // ── the reel ──────────────────────────────────────────────
+    var reel = $('[data-reel]'), cards = $$('[data-card]', reel), rc = $$('[data-rc]'), gos = $$('[data-go]');
+    var fine = window.matchMedia && matchMedia('(hover:hover) and (pointer:fine)').matches;
+    var vel = 0, want = 0, drifting = false, act = -1, pt = null;
+    function center(i, smooth) {
+      i = Math.max(0, Math.min(cards.length - 1, i)); var c = cards[i];
+      reel.scrollTo({ left: c.offsetLeft + c.offsetWidth / 2 - reel.clientWidth / 2, behavior: smooth ? 'smooth' : 'auto' });
+    }
+    function nearest() {
+      var mid = reel.scrollLeft + reel.clientWidth / 2, b = 0, bd = 1e12;
+      cards.forEach(function (c, i) { var d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < bd) { bd = d; b = i; } });
+      return b;
+    }
+    function hv(c, on) {
+      var v = c.querySelector('video[data-hv]'); if (!v) return;
+      if (on) {
+        if (!v.getAttribute('src')) { v.src = v.getAttribute('data-hv'); v.addEventListener('error', function () { v.remove(); }); }
+        v.muted = true; var p = v.play(); if (p && p.then) p.then(function () { v.style.opacity = '1'; }).catch(function () {});
+      } else { v.pause(); v.style.opacity = '0'; }
+    }
+    function setActive(i) {
+      if (i === act) return; act = i;
+      cards.forEach(function (c, k) { var on = k === i; c.classList.toggle('on', on); c.setAttribute('aria-current', on ? 'true' : 'false'); if (!on) hv(c, false); });
+      clearTimeout(pt); if (!reduce) pt = setTimeout(function () { hv(cards[act], true); }, 260);
+      rc.forEach(function (n) { n.classList.toggle('on', +n.getAttribute('data-rc') === i); });
+      gos.forEach(function (n) { n.classList.toggle('on', +n.getAttribute('data-go') === i); });
+    }
+    function loop() {
+      vel += (want - vel) * 0.07;
+      if (Math.abs(vel) > 0.08) { reel.scrollLeft += vel; drifting = true; }
+      else if (drifting && want === 0) { drifting = false; reel.style.scrollSnapType = ''; center(nearest(), true); }
+      setActive(nearest());
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+    reel.addEventListener('mousemove', function (e) {
+      if (!fine) return;
+      var r = reel.getBoundingClientRect(), f = (e.clientX - r.left) / r.width, z = 0.16, s = 0;
+      if (f < z) s = -(1 - f / z); else if (f > 1 - z) s = (f - (1 - z)) / z;
+      if (s !== 0) reel.style.scrollSnapType = 'none';
+      want = (s > 0 ? 1 : -1) * s * s * 9;
+    }, { passive: true });
+    reel.addEventListener('mouseleave', function () { want = 0; });
+
+    // ── early cards play on hover ─────────────────────────────
+    $$('[data-early]').forEach(function (c) {
+      var v = c.querySelector('video');
+      c.addEventListener('mouseenter', function () { if (!reduce) play(v); });
+      c.addEventListener('mouseleave', function () { v.pause(); });
+    });
+
+    // ── the sheet ─────────────────────────────────────────────
+    var sheet = $('#sheet'), stage = $('#sh-stage'), thumbs = $('#sh-thumbs');
+    var sel = null, mi = 0, lastFocus = null;
+    function group(id) { return DATA.groups.work.indexOf(id) >= 0 ? DATA.groups.work : DATA.groups.early; }
+    function el(tag, attrs) { var n = document.createElement(tag); for (var k in attrs) n.setAttribute(k, attrs[k]); return n; }
+    function showMedia() {
+      var d = DATA.sheet[sel], m = d.media[mi]; stage.innerHTML = '';
+      if (!m) return;
+      if (m.kind === 'video') {
+        var v = el('video', { src: m.src, poster: m.poster || '', controls: '', playsinline: '', loop: '' });
+        v.muted = true; stage.appendChild(v); if (!reduce) play(v);
+      } else {
+        stage.appendChild(el('img', { src: m.src, alt: d.title }));
+      }
+      $$('button', thumbs).forEach(function (b, i) { b.classList.toggle('on', i === mi); });
+    }
+    function open(id) {
+      if (!DATA.sheet[id]) return;
+      if (sheet.hidden) lastFocus = document.activeElement;
+      sel = id; mi = 0;
+      var d = DATA.sheet[id], g = group(id), i = g.indexOf(id);
+      $('#sh-eyebrow').textContent = d.eyebrow;
+      $('#sh-title').textContent = d.title;
+      $('#sh-say').textContent = d.say;
+      var q = $('#sh-quote'); q.textContent = d.quote ? '“' + d.quote + '”' : ''; q.hidden = !d.quote;
+      $('#sh-text').textContent = d.body;
+      var n = $('#sh-note'); n.textContent = d.note; n.hidden = !d.note;
+      var links = $('#sh-links'); links.innerHTML = '';
+      if (d.link) { var a = el('a', { href: d.link }); a.textContent = 'read the full story ›'; links.appendChild(a); }
+      if (d.deck) { var b = el('a', { href: d.deck.href, target: '_blank', rel: 'noopener' }); b.textContent = d.deck.label + ' ↗'; links.appendChild(b); }
+      links.hidden = !links.children.length;
+      thumbs.innerHTML = '';
+      if (d.media.length > 1) d.media.forEach(function (m, k) {
+        var t = el('button', { 'aria-label': (m.kind === 'video' ? 'video' : 'photo ' + k) });
+        if (m.kind === 'video') t.textContent = '▶ video'; else t.appendChild(el('img', { src: m.src, alt: '', loading: 'lazy' }));
+        t.addEventListener('click', function () { mi = k; showMedia(); });
+        thumbs.appendChild(t);
+      });
+      thumbs.hidden = d.media.length < 2;
+      $('#sh-prev').textContent = '‹ ' + DATA.sheet[g[(i - 1 + g.length) % g.length]].title;
+      $('#sh-next').textContent = DATA.sheet[g[(i + 1) % g.length]].title + ' ›';
+      showMedia();
+      if (sheet.hidden) { sheet.hidden = false; document.documentElement.style.overflow = 'hidden'; $('.sh-close').focus(); }
+      sheet.scrollTop = 0;
+    }
+    function close() {
+      sheet.hidden = true; stage.innerHTML = ''; sel = null; document.documentElement.style.overflow = '';
+      if (lastFocus) lastFocus.focus({ preventScroll: true });
+    }
+    function step(dlt) { var g = group(sel), i = g.indexOf(sel); open(g[(i + dlt + g.length) % g.length]); }
+
+    sheet.addEventListener('click', function (e) {
+      if (e.target === sheet || e.target.closest('[data-close]')) close();
+      else if (e.target.closest('[data-prev]')) step(-1);
+      else if (e.target.closest('[data-next]')) step(1);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest || !sheet.hidden) return;
+      var g = e.target.closest('[data-go]'); if (g) { center(+g.getAttribute('data-go'), true); return; }
+      var st = e.target.closest('[data-step]'); if (st) { center(act + +st.getAttribute('data-step'), true); return; }
+      var c = e.target.closest('[data-card]');
+      if (c && c.getAttribute('aria-current') !== 'true') { e.preventDefault(); center(cards.indexOf(c), true); return; }
+      var o = e.target.closest('[data-open]'); if (o) open(o.getAttribute('data-open'));
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!sheet.hidden) {
+        if (e.key === 'Escape') close();
+        else if (e.key === 'ArrowRight') step(1);
+        else if (e.key === 'ArrowLeft') step(-1);
+        return;
+      }
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var r = reel.getBoundingClientRect();
+      if (r.bottom > 0 && innerHeight > r.top) { e.preventDefault(); center(act + (e.key === 'ArrowRight' ? 1 : -1), true); }
+    });
+
+    // deep link: /#p=dune opens that project
+    var m = location.hash.match(/^#p=([\w-]+)/); if (m) open(m[1]);
+  })();
+  </script>
 </Base>
 
 <style>
-  /* ---------- the montage ---------- */
-  .hero { position: relative; min-height: 100svh; display: grid; align-items: end; overflow: hidden; }
-  .reel { position: absolute; inset: 0; }
-  .reel video { width: 100%; height: 100%; object-fit: cover; }
-  .reel-veil {
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(10,12,14,.55) 0%, rgba(10,12,14,.2) 40%, rgba(10,12,14,.96) 100%);
+  /* ── film ── */
+  .film { --p: 0; position: relative; height: 270vh; margin-top: -49px; background: var(--bg); }
+  .film-stick { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  .film-title {
+    position: absolute; left: 0; right: 0; top: 0; padding: calc(49px + 11vh) 24px 0; text-align: center;
+    opacity: calc(1 - var(--p) * 2.4); transform: translateY(calc(var(--p) * -90px)) scale(calc(1 - var(--p) * .06)); transform-origin: 50% 0;
   }
-  .hero-copy { position: relative; padding-bottom: clamp(3rem, 12vh, 8rem); display: grid; gap: 1.25rem; }
-  .hero-copy h1 { font-size: var(--t-hero); }
-  .cue { color: var(--bone-dim); }
-
-  /* ---------- hero without the montage ----------
-     Not a placeholder: the thesis stated as two measurements, which is the
-     whole argument of the site. Upgrades to video the moment one exists. */
-  .hero.bare { align-items: center; }
-  .hero.bare .hero-copy { padding-bottom: 0; gap: clamp(2rem, 6vh, 3.5rem); }
-
-  .thesis { display: grid; gap: clamp(1.5rem, 4vh, 2.5rem); }
-  /* the same question, ten years apart. the 2018 reading is deliberately
-     quieter and smaller — the progression is the point, not the pair. */
-  .thesis dl {
-    display: flex; flex-wrap: wrap; align-items: end;
-    gap: clamp(1rem, 3vw, 2.5rem);
+  .film-title h1 { margin: 0 0 18px; font-size: clamp(48px, 8vw, 104px); line-height: 1; font-weight: 700; letter-spacing: -0.05em; }
+  .film-title .sub { margin: 0 auto; max-width: 30em; font-size: clamp(18px, 2vw, 24px); line-height: 1.4; font-weight: 500; letter-spacing: -0.012em; color: var(--ink2); text-wrap: balance; }
+  .hi > span { display: inline-block; opacity: 0; animation: kaHi 1.1s var(--ease) forwards; }
+  .hi > span:nth-child(1) { animation-delay: .15s; } .hi > span:nth-child(2) { animation-delay: .3s; } .hi > span:nth-child(3) { animation-delay: .45s; }
+  p.hi > span { animation-delay: .75s; }
+  .film-clip {
+    position: absolute; inset: 0; background: #000; cursor: pointer; will-change: clip-path;
+    clip-path: inset(calc(50vh + 10px) max(20px, calc(50vw - 560px)) 5vh max(20px, calc(50vw - 560px)) round 30px);
+    -webkit-clip-path: inset(calc(50vh + 10px) max(20px, calc(50vw - 560px)) 5vh max(20px, calc(50vw - 560px)) round 30px);
   }
-  .thesis dl > div { display: grid; gap: 0.5rem; }
-  .thesis dd { line-height: 1; }
-  .then dd { font-size: clamp(1.6rem, 3.4vw, 2.3rem); color: var(--bone-dim); }
-  .then dt { color: var(--steel-dim); }
-  .now dd  { font-size: clamp(2.4rem, 6.4vw, 4rem); color: var(--brass); }
-
-  .arrow { display: flex; align-items: center; gap: 0.6rem; padding-bottom: 0.55rem; color: var(--steel-dim); }
-  .arrow i {
-    display: block; width: clamp(2rem, 6vw, 5rem); height: 1px;
-    background: linear-gradient(90deg, var(--hairline-2), var(--brass));
-    position: relative;
+  .film-clip video { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 1.6s ease; transform: scale(calc(1.12 - .12 * var(--p))); }
+  .film-clip video.on { opacity: 1; }
+  .film-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 48%, rgba(0,0,0,.72) 100%); opacity: clamp(0, calc((var(--p) - .55) * 3), 1); }
+  .film-cue { position: absolute; left: 0; right: 0; bottom: calc(5vh + 26px); display: flex; justify-content: center; pointer-events: none; opacity: calc(1 - var(--p) * 5); }
+  .film-cue > span {
+    display: flex; align-items: center; gap: 10px; padding: 11px 20px 11px 18px; border-radius: 980px;
+    background: rgba(255,255,255,.18); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255,255,255,.28); color: #fff; font-size: 15px; font-weight: 500;
+    opacity: 0; animation: kaHi 1s var(--ease) 1.4s forwards;
   }
-  .arrow i::after {
-    content: ''; position: absolute; right: 0; top: -2px;
-    border-left: 5px solid var(--brass);
-    border-top: 2.5px solid transparent; border-bottom: 2.5px solid transparent;
-  }
-  @media (max-width: 34rem) { .arrow { display: none; } }
+  .nudge { display: block; font-size: 16px; line-height: 1; animation: kaNudge 1.6s ease-in-out infinite; }
+  .film-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 clamp(24px, 6vw, 88px) clamp(56px, 11vh, 110px); pointer-events: none; opacity: clamp(0, calc((var(--p) - .8) * 6), 1); transform: translateY(calc((1 - var(--p)) * 30px)); }
+  .cap-wrap { max-width: 1100px; margin: 0 auto; }
+  .film-cap p { margin: 0; max-width: 20ch; color: #f5f5f7; min-height: 2.16em; display: flex; align-items: flex-end; font-size: clamp(28px, 4vw, 56px); line-height: 1.08; font-weight: 600; letter-spacing: -0.035em; text-wrap: balance; text-shadow: 0 2px 24px rgba(0,0,0,.35); transition: opacity .5s ease, transform .5s ease; }
+  @media (prefers-reduced-motion: reduce) { .hi > span, .film-cue > span { animation: none; opacity: 1; } .nudge { animation: none; } }
 
-  /* ---------- acts ---------- */
-  .act-head { margin-bottom: clamp(2rem, 5vh, 3.5rem); display: grid; gap: 0.6rem; }
-  .act-head h2 { font-size: var(--t-act); }
-  .act .prose + .prose { margin-top: 2rem; }
-  .beat-line { color: var(--bone); }
-  .aside { margin-top: 2.5rem; color: var(--steel-dim); }
-  .inline { display: inline; text-transform: none; margin-right: 0.4rem; color: var(--brass); }
-  .tight { padding-block: clamp(4rem, 11vh, 7rem); }
-  .silence { padding-block: clamp(10rem, 34vh, 20rem); }
-  .silence .prose p { font-size: var(--t-lead); }
-
-  @media (min-width: 62rem) {
-    /* :not(.beats) — the project beats are a .wrap child too, and without this
-       they become grid items in the sidebar layout and land in the 16rem column */
-    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) {
-      display: grid;
-      grid-template-columns: 16rem minmax(0, 1fr);
-      column-gap: clamp(2rem, 5vw, 5rem);
-      align-items: start;
-    }
-    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) > * { grid-column: 2; }
-    /* must match child-for-child: Astro appends [data-astro-cid] to every
-       compound, so a shorter descendant selector loses the cascade. */
-    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) > .act-head {
-      grid-column: 1; grid-row: 1 / -1;
-      position: sticky; top: 22vh; margin-bottom: 0; align-self: start;
-    }
-    .act:not(.contact):not(.pattern) > .wrap:not(.beats):not(.closing) > .act-head h2 {
-      font-size: clamp(1.5rem, 2.1vw, 1.95rem);
-      overflow-wrap: break-word; text-wrap: balance;
-    }
+  /* ── work ── */
+  .work { --cw: max(min(86vw, 300px), min(86vw, 980px, calc((100vh - 340px) * 1.6))); background: var(--bg2); padding: clamp(72px, 9vw, 110px) 0 clamp(72px, 9vw, 120px); scroll-margin-top: 48px; }
+  .work-head { width: var(--cw); margin: 0 auto 36px; display: flex; flex-direction: column; gap: 12px; }
+  .work-head h2 { margin: 0; font-size: clamp(40px, 6vw, 72px); line-height: 1.02; font-weight: 700; letter-spacing: -0.04em; }
+  .work-head p { margin: 0; max-width: 34em; font-size: clamp(18px, 1.8vw, 21px); line-height: 1.45; color: var(--ink2); }
+  .reel { position: relative; display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 6px calc(50% - var(--cw) / 2) 10px; }
+  .reel::-webkit-scrollbar { display: none; }
+  .card {
+    border: 0; padding: 0; margin: 0; cursor: pointer; display: block; flex: 0 0 var(--cw); width: var(--cw);
+    aspect-ratio: 16 / 10; scroll-snap-align: center; border-radius: 28px; overflow: hidden; position: relative; background: var(--chip);
+    transform: scale(.9); opacity: .4; transition: transform .6s var(--ease), opacity .6s ease;
   }
+  .card.on { transform: none; opacity: 1; }
+  .card img, .card video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card video { opacity: 0; transition: opacity .6s ease; }
+  .reel-foot { width: var(--cw); margin: 30px auto 0; }
+  .reel-row { display: flex; align-items: flex-start; gap: 24px; }
+  .captions { flex: 1; min-width: 0; display: grid; }
+  .cap { grid-area: 1 / 1; display: flex; flex-direction: column; gap: 8px; opacity: 0; visibility: hidden; transform: translateY(10px); transition: opacity .45s ease, transform .45s ease, visibility .45s; }
+  .cap.on { opacity: 1; visibility: visible; transform: none; }
+  .cap-year { font-size: 14px; font-weight: 600; color: var(--ink2); }
+  .cap h3 { margin: 0; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.08; font-weight: 700; letter-spacing: -0.03em; }
+  .cap p { margin: 0; max-width: 34em; font-size: clamp(17px, 1.7vw, 20px); line-height: 1.45; color: var(--ink2); text-wrap: pretty; }
+  .more { all: unset; cursor: pointer; align-self: flex-start; margin-top: 6px; font-size: 17px; color: var(--link); }
+  .more:hover { text-decoration: underline; }
+  .more:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+  .steps { flex: none; display: flex; gap: 10px; }
+  .step { border: 0; padding: 0; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; background: var(--chip); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .step:hover { filter: brightness(.94); }
+  .index { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 22px; }
+  .index button { border: 0; padding: 0; background: none; cursor: pointer; font-size: 15px; line-height: 1.5; color: var(--ink2); transition: color .3s; }
+  .index button.on { color: var(--ink); }
+  .index button:hover { text-decoration: underline; }
 
-  /* ---------- the first one ---------- */
-  .first { margin-top: 2.5rem; max-width: 42rem; }
-  .first video, .first img, .first .empty {
-    width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
-    background: var(--ink-1); border: 1px solid var(--hairline);
+  /* ── first ones ── */
+  .story { background: var(--bg2); padding: clamp(80px, 10vw, 130px) 24px; scroll-margin-top: 48px; }
+  .story-in { max-width: 1100px; margin: 0 auto; }
+  .story-head { max-width: 640px; margin-bottom: 44px; }
+  .kicker { margin: 0 0 8px; font-size: 17px; font-weight: 600; color: var(--ink2); }
+  .kicker.sm { font-size: 13px; margin: 0; }
+  .kicker.after { margin: 0 0 20px; }
+  .story-head h2 { margin: 0 0 22px; font-size: clamp(40px, 6vw, 64px); line-height: 1.04; font-weight: 700; letter-spacing: -0.04em; }
+  .story-head p:not(.kicker) { margin: 0 0 14px; font-size: 21px; line-height: 1.4; color: var(--ink2); }
+  .first {
+    all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    background: var(--card); border-radius: 28px; overflow: hidden; margin-bottom: 56px; transition: box-shadow .45s;
   }
-  .empty {
-    display: grid; place-items: center;
-    background: repeating-linear-gradient(45deg, transparent 0 11px, rgba(255,255,255,.014) 11px 22px), var(--ink-1);
+  .first:hover { box-shadow: 0 18px 50px rgba(0,0,0,.1); }
+  .first:focus-visible, .ecard:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+  .first-media { aspect-ratio: 4 / 3; background: var(--chip); overflow: hidden; }
+  .first-media video, .ecard-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .first-text { padding: clamp(28px, 4vw, 48px); display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .first-title { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); }
+  .first-body { font-size: 18px; line-height: 1.5; color: var(--ink2); max-width: 40ch; }
+  .early { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
+  .ecard {
+    all: unset; box-sizing: border-box; cursor: pointer; background: var(--card); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column;
+    transition: transform .45s var(--ease), box-shadow .45s, opacity 1s var(--ease);
   }
-  .empty.sm { aspect-ratio: 4 / 3; }
-  .first figcaption { padding-top: 0.9rem; display: grid; gap: 0.35rem; }
-  .first figcaption p { font-size: var(--t-lead); }
-  .meas { color: var(--brass); }
+  .ecard:hover { transform: translateY(-4px); box-shadow: 0 18px 50px rgba(0,0,0,.12); }
+  .ecard-media { aspect-ratio: 16 / 10; background: var(--chip); overflow: hidden; }
+  .ecard-text { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .ecard-year { font-size: 12px; font-weight: 600; color: var(--ink2); }
+  .ecard-title { font-size: 18px; line-height: 1.25; font-weight: 600; color: var(--ink); }
+  .ecard-body { font-size: 14px; line-height: 1.45; color: var(--ink2); }
 
-  /* ---------- childhood tiles: alive, but compact ---------- */
-  .tiles {
-    list-style: none; padding: 0; margin: 2.5rem 0 0;
-    display: grid; gap: 1.25rem;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  /* ── contact ── */
+  .contact { background: var(--bg2); padding: clamp(90px, 11vw, 140px) 0 clamp(70px, 8vw, 100px); text-align: center; scroll-margin-top: 48px; overflow: hidden; }
+  .wall {
+    display: flex; flex-direction: column; gap: 16px; opacity: .28; filter: grayscale(1); transition: opacity .6s ease, filter .6s ease;
+    margin: 0 0 clamp(56px, 7vw, 88px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
   }
-  .tiles li { display: grid; gap: 0.35rem; align-content: start; }
-  /* No square box: this footage mixes portrait phone video and landscape, so a
-     1/1 frame padded nearly every tile with bars. Natural height instead — the
-     tiles are a masonry-ish row of differently shaped clips, which is honest to
-     the footage and leaves no empty frame around any of it. */
-  /* auto on both axes under two caps: the box then scales to fit width AND
-     height while keeping its ratio, so a tall portrait clip in a narrow tile
-     shrinks rather than getting bars pasted down its sides. */
-  .tiles video, .tiles img {
-    display: block;
-    width: auto; height: auto;
-    max-width: 100%; max-height: 20rem;
-    margin-inline: auto;
-  }
-  .tiles .empty {
-    width: 100%; aspect-ratio: 1 / 1;
-    background: var(--ink-1); border: 1px solid var(--hairline);
-  }
-  .tiles h3 { font-size: var(--t-small); font-weight: 400; color: var(--bone); line-height: 1.3; }
-  .tile-note { font-size: var(--t-micro); color: var(--bone-dim); font-style: italic; line-height: 1.45; }
+  .wall:hover { opacity: .9; filter: none; }
+  .wall-row { display: flex; gap: 16px; width: max-content; animation: kaWall 70s linear infinite; }
+  .wall-row.rev { animation-direction: reverse; animation-duration: 84s; }
+  .wall:hover .wall-row { animation-play-state: paused; }
+  @keyframes kaWall { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .wall-row { animation: none; } }
+  .wall button { border: 0; padding: 0; cursor: pointer; flex: none; width: clamp(180px, 20vw, 260px); aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; position: relative; background: var(--chip); transition: transform .5s var(--ease); }
+  .wall button:hover { transform: scale(1.04); }
+  .wall img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .contact-in { padding: 0 24px; }
+  .contact h2 { margin: 0 0 18px; font-size: clamp(56px, 9vw, 112px); line-height: 1; font-weight: 700; letter-spacing: -0.045em; }
+  .contact-in > p { margin: 0 0 30px; font-size: 21px; color: var(--ink2); }
+  .mail { display: inline-block; font-size: clamp(20px, 2.6vw, 28px); font-weight: 600; margin-bottom: 30px; word-break: break-all; }
+  .pills.center { justify-content: center; }
 
-  /* ---------- pattern ---------- */ }
-
-  /* ---------- credits ---------- */
-  /* <details> so it works with zero JS and stays keyboard-accessible */
-  .who summary {
-    cursor: pointer; list-style: none;
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.9rem;
-  }
-  .who summary::-webkit-details-marker { display: none; }
-  .who summary .hinge { font-size: var(--t-lead); }
-  .who summary .cue { color: var(--steel-dim); transition: color 0.2s var(--ease); }
-  .who summary:hover .cue { color: var(--brass); }
-  .who[open] summary .cue { color: var(--steel-dim); }
-  .who[open] summary .cue::after { content: ''; }
-
-  .credits { margin-top: 3rem; display: grid; gap: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
-  .credit-group h3 { margin-bottom: 1rem; }
-  .credit-group ul { list-style: none; padding: 0; display: grid; gap: 0.85rem; }
-  .credit-group li { display: grid; gap: 0.15rem; }
-  .rl { font-size: var(--t-small); }
-
-  /* ---------- contact ---------- */
-  .contact { border-top: 1px solid var(--hairline); padding-bottom: 6rem; }
-  .contact h2 { font-size: var(--t-act); margin-bottom: 0.5rem; }
-  .links { list-style: none; padding: 0; margin-top: 2.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; }
-  .links a { border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
-  .links a:hover { color: var(--brass); border-color: var(--brass); }
+  /* ── sheet ── */
+  .backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.42); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); overflow-y: auto; padding: clamp(16px, 4vw, 48px) 14px; animation: kaFade .3s ease; }
+  .backdrop[hidden] { display: none; }
+  .sheet { max-width: 980px; margin: 0 auto; background: var(--card); color: var(--ink); border-radius: 30px; overflow: hidden; position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.3); animation: kaSheet .5s cubic-bezier(.2,.8,.2,1); }
+  .sh-close { all: unset; cursor: pointer; position: absolute; top: 16px; right: 16px; z-index: 2; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,.55); backdrop-filter: blur(10px); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .sh-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .sh-stage { aspect-ratio: 16 / 10; background: #000; position: relative; }
+  .sh-stage :global(video), .sh-stage :global(img) { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .sh-thumbs { display: flex; gap: 8px; padding: 14px 22px 0; overflow-x: auto; }
+  .sh-thumbs[hidden] { display: none; }
+  .sh-thumbs :global(button) { all: unset; cursor: pointer; flex: none; width: 76px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: var(--chip); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--ink2); outline: 2px solid transparent; outline-offset: 2px; }
+  .sh-thumbs :global(button.on) { outline-color: var(--link); }
+  .sh-thumbs :global(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sh-body { padding: clamp(24px, 4vw, 44px) clamp(22px, 5vw, 56px) clamp(28px, 4vw, 44px); display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+  .sh-eyebrow { font-size: 14px; font-weight: 600; color: var(--ink2); }
+  .sh-body h3 { margin: 0; font-size: clamp(32px, 4.5vw, 48px); line-height: 1.05; font-weight: 700; letter-spacing: -0.035em; }
+  .sh-say { margin: 0; font-size: 21px; color: var(--ink2); }
+  .sh-quote { margin: 10px 0 0; font-size: 24px; line-height: 1.3; font-weight: 600; letter-spacing: -0.02em; }
+  .sh-text { margin: 8px 0 0; font-size: 19px; line-height: 1.5; text-wrap: pretty; }
+  .sh-note { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink2); }
+  .sh-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 6px; font-size: 17px; }
+  [hidden] { display: none !important; }
+  .sh-nav { border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; padding: 18px clamp(22px, 5vw, 56px); }
+  .sh-nav button { all: unset; cursor: pointer; font-size: 15px; color: var(--link); min-width: 0; }
+  .sh-nav button:last-child { text-align: right; }
+  .sh-nav button:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
 </style>

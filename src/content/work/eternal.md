@@ -37,7 +37,8 @@ from the software.
 
 ## Where it went
 
-**Bronze Medal, Inter IIT Tech Meet 14.0**, among all IITs. Hardware design lead.
+**Bronze Medal, Inter IIT Tech Meet 14.0** (IIT Patna), among all IITs. I was the hardware and
+design lead.
 
 Also **4th position, Engineers Conclave** at the same meet, as presenting author on a paper on
 laser micro-3D printing of silicon carbide microstructures.

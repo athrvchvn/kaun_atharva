@@ -38,16 +38,20 @@ it.
 source impedance from 885 MΩ down to 88.4 MΩ by parallel capacitance. It improved battery charging
 efficiency by **54%**. Patent filed.
 
-## What was delivered
+## What the lab delivered
 
 **Ten pairs of power-harvesting boots**, each integrating the TENG, the power-harvesting module,
-GPS and RFID — plus RFID and GPS receiver units. Delivered to **ARDE, Pune** in July 2024.
+GPS and RFID — plus RFID and GPS receiver units — delivered to **ARDE, Pune** at the end of the
+project in 2024.
 
-The intended use: locating soldiers' positions without a battery to maintain, and self-powered
-RFID for identification and attendance records.
+The intended use: locating soldiers without a battery to maintain, and self-powered RFID for
+identification and attendance records.
 
-## Note
+## Where I come in
 
-A three-year DRDO/ARDB-funded project led by **Prof. I.A. Palani** at IIT Indore, with a team.
-I joined it in my first year. It was the first thing I worked on after being given access to that
-lab, and it is the reason I was.
+The project was a three-year DRDO/ARDB-funded effort (August 2021 to August 2024) led by
+**Prof. I.A. Palani**, built by the lab's researchers — Anshu Sahu, Arpit Singh, Diksha Jaurker,
+Rajat Vishwakarma and others. The texturing work and the delivered boots are theirs.
+
+I joined the lab in **March 2025**, in my first year, and my work was the impedance-matching and
+rectification circuit described above. It was the first thing I worked on in that lab.

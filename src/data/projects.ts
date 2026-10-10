@@ -1,221 +1,197 @@
-// The spine's source of truth. Used by the homepage, /work, and the pattern plot.
+// Single source of truth for the site. The homepage reel, the "first ones"
+// grid, the quick-look sheet and every /work/<id> page all read from here.
 //
-// `what`  = factual description, safe to derive from the résumés.
-// `problem` = the personal annoyance that caused it, IN ATHARVA'S VOICE.
-//   ⚠️ Mostly null on purpose. These cannot be invented — inventing a motivation
-//   would break the one rule that matters. Atharva supplies them; see GAPS.md.
-
-export type Thread = 'where' | 'unplugged' | 'ships';
-export type Outcome =
-  | 'sold' | 'deployed' | 'award' | 'patent' | 'published' | 'failed' | 'abandoned' | null;
+// Every fact below is taken from a source document — the résumé, a project
+// report, the DUNE paper, the DRDO completion report — not from memory.
+// If something changes, change it here and in src/content/work/<id>.md.
+//
+// Media lives in public/media/projects/ and is named after the id.
 
 export interface Project {
-  slug: string;
+  id: string;            // also the URL: /work/<id>
+  year: string;
   title: string;
-  year: number;          // for the plot
-  yearLabel: string;
-  act: 0 | 1 | 2 | 3 | 4 | 5;
-  what: string;
-  problem?: string | null;
-  threads: Thread[];
-  outcome?: Outcome;
-  note?: string;         // award detail, deployment, etc.
-  deep?: boolean;        // has a written page in Phase 1
-  media?: string | null; // base path, no extension: `${media}.mp4` + `${media}.jpg`
-  mediaNote?: string;    // caption under the clip — REQUIRED when the media is a
-                         // render or concept animation rather than real footage
-  pair?: [string, string]; // two slugs whose images render side by side, for
-                            // minor builds grouped into one beat (e.g. club projects)
-  doc?: { href: string; label: string }; // a report or deck the visitor can open
-  kind?: 'award' | 'milestone'; // a punctuation mark in the timeline rather
-                                // than a project — same quieter treatment
+  line?: string;         // short subtitle, shown as the eyebrow
+  say: string;           // one plain-English sentence for the reel
+  body: string;          // what it is, technically
+  quote?: string;
+  note?: string;         // context: where, who, what happened
+  facts?: [string, string][]; // label/value rows on the project page
+  video?: string;        // public/media/projects/<video>.mp4
+  img?: string;
+  extras?: string[];
+  caption?: string;      // required when the still is a render or CAD
+  badVideo?: boolean;    // clip is weak; lead with photos instead
+  deck?: { href: string; label: string };
+  page?: boolean;        // has a long write-up at src/content/work/<id>.md
 }
 
-export const THREADS: Record<Thread, { label: string; question: string }> = {
-  where:     { label: 'where am i?',  question: 'machines working out where they are' },
-  unplugged: { label: 'unplugged',    question: 'machines that power themselves' },
-  ships:     { label: 'it ships',     question: 'finished, and in someone else’s hands' },
-};
-
-export const projects: Project[] = [
-  // ---------- act 0 — the workshops ----------
-  { slug: 'office-chair', title: 'Office chair', year: 2019, yearLabel: '2019', act: 0,
-    what: 'A broken chair pulled out of scrap and welded back together.',
-    problem: 'i wanted an office chair. my father wouldn’t buy me one.',
-    threads: ['ships'], outcome: 'failed', note: 'Broke again a few months later.' },
-
-  { slug: 'study-table', title: 'Folding study table', year: 2020, yearLabel: '2020', act: 0,
-    what: 'My part of a home interior my father was contracted for.',
-    threads: ['ships'], outcome: 'sold', note: 'Delivered to a client at 13.' },
-
-  { slug: 'extension-box', title: 'Portable extension box', year: 2018, yearLabel: '~2018', act: 0,
-    what: 'The size of a power socket. Housed three devices plus a bulb socket.',
-    threads: ['ships'], note: 'The first thing I remember making. No photograph survives.' },
-
-  // ---------- act 1 — harshit, and then the sky ----------
-  { slug: 'smart-dustbin', title: 'Smart dustbin', year: 2018, yearLabel: '2018', act: 1,
-    what: 'An ultrasonic sensor and a servo. The lid opens when a hand comes near.',
-    threads: ['where'], note: 'Age 11. The first measurement.' },
-
-  { slug: 'smart-bulb', title: 'Phone-controlled bulb', year: 2019, yearLabel: '~2019', act: 1,
-    what: 'A light switched on and off from a phone.', threads: [] },
-
-  { slug: 'mini-piano', title: 'Mini piano', year: 2019, yearLabel: '~2019', act: 1,
-    what: 'Buttons, tones, and a speaker.', threads: [] },
-
-  { slug: 'specs-finder', title: 'Wireless specs finder', year: 2019, yearLabel: '~2019', act: 1,
-    what: 'A wireless tag for locating a misplaced pair of glasses.',
-    threads: ['where'] },
-
-  { slug: 'soundbar', title: 'Soundbar', year: 2020, yearLabel: '~2020', act: 1,
-    what: 'Built from scratch.', threads: [] },
-
-  { slug: 'bag-weight-distributor', title: 'Bag weight distributor', year: 2021, yearLabel: '2021', act: 1,
-    what: 'A school bag that redistributes its own load.',
-    threads: ['ships'], outcome: 'award',
-    note: 'INSPIRE Award MANAK, Department of Science & Technology, Govt. of India. ₹10,000.' },
-
-  { slug: 'fanta-santa', title: 'The Santa that dispensed Fanta', year: 2021, yearLabel: '~2021', act: 1,
-    problem: 'me and a friend were bored on christmas.',
-    what: 'A Santa with lit-up eyes, wired to a bottle, dispensing Fanta from his urinal, which was the entire idea.',
-    threads: [], note: 'Made to pass the time. It worked.' },
-
-  // ---------- act 3/4 — iit indore ----------
-  { slug: 'gps-shoes', title: 'Power-harvesting army boots — laser-textured TENG', year: 2025, yearLabel: '2021–24', act: 3,
-    what: 'An army boot that generates its own electricity from walking. A triboelectric nanogenerator in the sole is laser-textured at 355 nm to raise its output, then rectified and stored to run GPS and RFID for locating and identifying soldiers — with no battery to change. Ten pairs were built and delivered to ARDE, Pune.',
-    threads: ['where', 'unplugged'], outcome: 'deployed', deep: true,
-    note: 'DRDO / ARDB-funded, three years, led by Prof. I.A. Palani at IIT Indore. My first project in that lab: the impedance-matching and rectification circuit, which improved charging efficiency by 54%. Patent filed.' },
-
-  { slug: 'alzheimers-shoes', title: 'Gait-analysis shoes for early Alzheimer’s detection', year: 2025, yearLabel: '2025', act: 4,
-    what: 'A wearable shoe embedded with TENG sensors to monitor gait abnormalities.',
-    threads: ['where', 'unplugged'], outcome: 'abandoned',
-    note: 'I stopped for three reasons: my own expertise ceiling at the time, TENG not showing promise, and training data that would have needed hospital access to patients.' },
-
-  { slug: 'micromouse', title: 'Micromouse', year: 2025, yearLabel: '2024–25', act: 4,
-    what: 'A maze-solving robot.', threads: ['where'] },
-
-  { slug: 'morphobot', title: 'Morphobot — a drone that lands and drives away', year: 2025, yearLabel: '2025', act: 4,
-    problem: 'flying is expensive. if the ground is drivable, don’t fly.',
-    what: 'A vehicle that flies to a site, lands, folds its rotor arms down and drives on the rotor guards as wheels — then reaches into rubble with a 4-axis arm actuated by shape memory alloy and steered by hand gestures. Built for disaster response: search from the air, work on the ground.',
-    threads: ['where'], deep: true,
-    note: 'Two prototypes. Mechatronics & Instrumentation Lab, IIT Indore, under Prof. I.A. Palani. With Soham Mondal and Tejal Uplenchwar.' },
-
-  { slug: 'iroc-drone', title: 'NoGPS autonomous drone — ISRO Robotics Challenge', year: 2025, yearLabel: '2025', act: 4,
-    what: 'An autonomous aerial drone for Martian-surface operation: real-time terrain mapping, safe-spot detection, GPS-independent landing.',
-    threads: ['where'], outcome: 'failed', deep: true,
-    note: 'IROC 2025. There is a folder in my archive named “fails”. It has six videos in it.' },
-
-  // NB: this IS the line follower. The course set the line-following brief;
-  // the patrolling behaviour was the team's own addition. One project, not two.
-  { slug: 'patrolling-bot', title: 'Line follower → patrolling bot', year: 2025, yearLabel: '2024–25', act: 4,
-    problem: 'the makerspace course asked for a line follower. we had to add one feature of our own.',
-    what: 'A line-following robot that streams live camera footage back to a PC. An SOS button on the device notifies the control centre and puts the bot into a 360° rotation so it can be found.',
-    threads: ['where'],
-    note: 'First-year Makerspace course project, IIT Indore.' },
-
-  // Two minor club builds, shown as one paired beat rather than as two
-  // projects competing for the same weight as the deep ones. `pair` points
-  // ProjectBeat at two images shown side by side instead of a single hero.
-  { slug: 'robotics-club', title: 'Quadruped & robotic arm', year: 2025, yearLabel: '2024–25', act: 4,
-    what: 'A four-legged walking robot and a multi-axis manipulator arm.',
-    threads: ['where'],
-    note: 'Robotics Club projects, IIT Indore.',
-    pair: ['quadruped', 'robotic-arm'] },
-
-  { slug: 'esp32-flight-controller', title: 'Custom ESP32 flight controller', year: 2025, yearLabel: '2025', act: 4,
-    what: 'A custom flight-controller PCB integrating MPU6050 IMU, magnetometer and optical flow sensor. EKF sensor fusion achieving a 25-minute stable hover in GPS-denied conditions.',
-    threads: ['where'], note: 'STARC Lab, IIT Indore.' },
-
-  { slug: 'iitisoc-award', kind: 'award',
-    title: 'Gold Medal — IITISoC, Robotics', year: 2025, yearLabel: '2025', act: 4,
-    what: 'Gold in the Robotics domain of the IIT Indore Summer of Code, for the machine management system.',
-    threads: [] },
-
-  { slug: 'mms', title: 'Universal Machine Management System (RFID access control)', year: 2025, yearLabel: '2025–', act: 4,
-    what: 'Full-stack access-control infrastructure across five lab machines: ESP32 + MFRC522 RFID nodes with relay actuation, an automated card dispenser, an RPi 5 issuing station, and a Firebase backend with a real-time dashboard.',
-    threads: ['ships'], outcome: 'deployed', deep: true,
-    note: 'IITISoC Gold Medal. Grand Innovation & Best Maker Award, IAMS 2025, ₹62,500. Patent in progress. Operational in Tinkerers’ Lab, IIT Indore.' },
-
-  { slug: 'iams-award', kind: 'award',
-    title: 'Grand Innovation & Best Maker Award — IAMS 2025', year: 2025, yearLabel: '2025', act: 4,
-    what: 'Both the Grand Innovation Award and the Best Maker Award at the Indian Academic Makerspaces Summit, with a cash prize of ₹62,500, for the machine management system.',
-    threads: [],
-    note: 'IAMS 2025, IIT Gandhinagar.' },
-
-  { slug: 'eternal', title: 'Eternal — autonomous warehouse inventory robot', year: 2025, yearLabel: '2025', act: 4,
-    what: 'A Jetson Orin Nano-powered AMR: ROS2/Nav2, RPLidar A1 SLAM, AMCL localization, four-channel ultrasonic obstacle avoidance. ±7 cm horizontal, ±0.02 cm vertical. Belt-driven Z-axis scanning 200–1800 mm with 100% QR detection.',
-    threads: ['where'], outcome: 'award', deep: true,
-    note: 'Bronze Medal, Inter IIT Tech Meet 14.0, among all IITs.' },
-
-  // Sits immediately after Eternal: the award is what happened to that project.
-  { slug: 'inter-iit-award', kind: 'award',
-    title: '3rd Position — Inter IIT Tech Meet 14.0, Eternal', year: 2025, yearLabel: '2025', act: 4,
-    what: 'Bronze in the Eternal problem statement — the autonomous warehouse inventory robot — competing against teams from every IIT.',
-    threads: [],
-    note: 'Inter IIT Tech Meet 14.0, held at IIT Patna.' },
-
-  { slug: 'aqualoop', title: 'Aqualoop — in-pipe water monitoring and selective recycling', year: 2026, yearLabel: '2026', act: 4,
-    what: 'A module that fits between any two pipes and powers itself from the water running through it. A micro-hydro turbine charges the electronics; pH, TDS and turbidity sensors feed a polynomial regression on the microcontroller to produce a live water quality score. At a building inlet it verifies the incoming supply and flags contamination. At the outlet it drives smart diverter valves, splitting used water into a recycling tank or the septic line — instead of treating everything as one waste stream.',
-    threads: ['unplugged', 'ships'], outcome: 'award', deep: true,
-    note: 'Second place, Vishwakarma Awards 2026 — among 1,054 teams. ₹80,000. Team of 5.' },
-
-  // Sits immediately after Aqualoop: the award is what happened to that project,
-  // so it reads as an outcome rather than as a separate achievement.
-  { slug: 'vishwakarma-award', kind: 'award',
-    title: '2nd Prize — Vishwakarma Awards, Intelligent Machines', year: 2026, yearLabel: '2026', act: 4,
-    what: 'Second place among 1,054 teams, with a cash prize of ₹80,000, for Aqualoop — the in-pipe water quality monitoring and selective recycling system.',
-    threads: [],
-    note: 'Awarded by the Maker Bhavan Foundation. Team lead.' },
-
-  { slug: 'wind-tunnel', title: 'Low-speed wind tunnel with LED-based PIV', year: 2026, yearLabel: '2025–26', act: 4,
-    what: 'A low-cost tabletop wind tunnel with transparent test section and custom contraction–diffuser geometry, plus an LED-based PIV alternative using OpenCV optical flow to visualise velocity fields.',
-    threads: [] },
-
-  { slug: 'ball-balancing-bot', title: 'Ball balancing bot — a Stewart platform that will not let a ball fall off', year: 2026, yearLabel: '2026', act: 4,
-    what: 'A 3RRS parallel manipulator that keeps a ball balanced at the centre of a tilting plate. An overhead Pi Cam finds the ball by HSV threshold and blob centroid, a PID controller works out the tilt needed to correct it, inverse kinematics converts that tilt into three servo angles, and the loop repeats fast enough that the ball never gets away.',
-    threads: ['where'], deep: true,
-    note: 'AA216 Flight Mechanics & Classical Control, IIT Indore. Group project of five.',
-    doc: { href: '/docs/ball-balancing-bot.pdf', label: 'the course deck' } },
-
-  { slug: 'teng-condition-monitoring', title: 'Self-powered IoT fault detection — TENG + STL–CNN–LSTM', year: 2026, yearLabel: '2026', act: 4,
-    what: 'A deep-learning fault detection pipeline for rotating machinery using TENG sensors as self-powered vibration transducers. STL decomposition across seven fault classes, 1D-CNN feature extraction, LSTM temporal modelling. 98.57% accuracy — beating oscilloscope (97.31%) and accelerometer (95.83%) baselines.',
-    threads: ['unplugged'], outcome: 'published' },
-
-  { slug: 'cement-3d-printer', title: 'Large-format cartesian cement 3D printer', year: 2026, yearLabel: 'Jan–May 2026', act: 4,
-    what: '1000×1000×600 mm. SFU1605 ball-screw X/Y, C-beam Z-axis, hopper-auger extrusion, NEMA 23 steppers, Arduino Mega + RAMPS 1.4. End-to-end component sourcing, Fusion 360 CAD, and hardware integration.',
-    threads: ['ships'], outcome: 'sold', deep: true,
-    note: 'Sold to and deployed in a research laboratory.' },
-
-  // Supersedes the old 'addverb-glove' entry: the glove is one of this system's
-  // two control paths, not a project of its own. Scope taken from the team's
-  // technical report (Feb 2026).
-  { slug: 'cobot', title: 'Autonomous & glove-controlled collaborative robot', year: 2026, yearLabel: 'Feb 2026', act: 4,
-    what: 'Two ways to drive an Addverb Syncro 5 six-axis cobot. Say “pick up the red bottle” and an LLM extracts the intent, a depth camera sweeps the workspace, YOLO closed-loop visual servoing centres the target, and the arm grasps and retracts unaided. Or wear an ESP32 sensor glove and fly it by hand, seven gestures classified online at ~20 Hz.',
-    threads: ['where'], outcome: 'published', deep: true,
-    note: 'Team of 8. Featured on Addverb Technologies’ official blog.' },
-
-  // Finished and published, so it sits in act 4 rather than act 5. Act 5 is
-  // reserved for the work that is still open — the closing line there ("that
-  // last one is not working yet") points at drone-rover, which is why DUNE
-  // leaving act 5 makes that act read correctly rather than emptying it.
-  // Note this is IIT Kanpur, not Indore like the rest of act 4; act 4 has no
-  // visible heading naming an institution, so nothing on the page contradicts.
-  // The internship that produced DUNE — placed immediately before it.
-  { slug: 'iitk-intern', kind: 'milestone',
-    title: 'Research Intern — Centre for Mechatronics, IIT Kanpur', year: 2026, yearLabel: '2026', act: 4,
-    what: 'Joined the Centre for Mechatronics at IIT Kanpur as a research intern, sponsored by NPTEL. This is where DUNE was built.',
-    threads: [] },
-
-  { slug: 'dune', title: 'DUNE — Dual UWB Navigation Engine', year: 2026, yearLabel: '2026', act: 4,
-    what: 'UWB-based indoor localization for a six-wheeled rocker-bogie rover in GPS-denied environments. Sub-7 cm positional accuracy in a 2×2 m arena via two-anchor two-way ranging. Dual-tag heading estimation with EKF fusion of UWB, wheel odometry and IMU.',
-    threads: ['where'], outcome: 'published', deep: true,
-    note: 'IEEE paper submitted. Open-source library plus hardware. Centre for Mechatronics, IIT Kanpur.' },
-
-  { slug: 'drone-rover', title: 'GPS-denied UWB drone–rover cooperative navigation', year: 2026, yearLabel: '2026–', act: 5,
-    what: 'A four-phase cooperative autonomy architecture: a drone autonomously deploys UWB anchors for centimetre-level rover localization. Onboard EKF fuses UWB, optical flow and IMU; a MAVLink/ROS2 bridge carries drone–rover comms.',
-    threads: ['where'], outcome: 'published',
-    note: 'First-author oral, NSSS 2026 (ISRO-sponsored) — selected among 40 students nationwide. Sub-10 cm on live hardware.' },
+// ── the first ones, 2018–2022 ────────────────────────────────────────────
+export const early: Project[] = [
+  { id: 'smart-dustbin', year: '2018', title: 'smart dustbin', line: 'the first one · age 11',
+    say: 'a dustbin that opens when you walk up to it.',
+    body: 'an ultrasonic sensor, a servo, and a dustbin lid. the lid opened when you walked up to it.',
+    video: 'smart-dustbin' },
+  { id: 'smart-bulb', year: '~2019', title: 'phone-controlled bulb',
+    say: 'a bulb you could switch from a phone.',
+    body: 'a bulb you could switch on and off from a phone.', video: 'smart-bulb' },
+  { id: 'mini-piano', year: '~2019', title: 'mini piano',
+    say: 'a small keyboard that played notes.',
+    body: 'buttons, tones and a speaker. a small keyboard that played notes.', video: 'mini-piano' },
+  { id: 'specs-finder', year: '~2019', title: 'wireless specs finder',
+    say: 'for a pair of glasses that kept going missing.',
+    body: 'a wireless tag for finding a pair of glasses that kept going missing.', video: 'specs-finder' },
+  { id: 'soundbar', year: '~2020', title: 'soundbar',
+    say: 'a homemade soundbar.', body: 'a soundbar, built from scratch.', video: 'soundbar' },
+  { id: 'bag-weight-distributor', year: '2021', title: 'bag weight distributor',
+    say: 'a school bag that spreads its own load.',
+    body: 'a school bag that redistributes its own load.',
+    note: 'INSPIRE award MANAK, department of science & technology, government of india. my parents were there.',
+    video: 'bag-weight-distributor' },
+  { id: 'fanta-santa', year: '~2021', title: 'the santa that dispensed fanta',
+    say: 'me and a friend were bored on christmas.',
+    body: 'a santa with lit-up eyes, wired to a bottle, dispensing fanta. me and a friend were bored on christmas.',
+    video: 'fanta-santa' },
 ];
 
-export const deepProjects = projects.filter((p) => p.deep);
-export const byAct = (act: number) => projects.filter((p) => p.act === act);
+// ── projects, newest first ───────────────────────────────────────────────
+export const work: Project[] = [
+  { id: 'dune', year: '2026', title: 'DUNE', line: 'dual-tag UWB navigation engine',
+    say: 'an open-source system that lets a ground robot work out where it is, and which way it’s facing, indoors without GPS.',
+    body: 'an open-source indoor positioning system for ground robots, built on low-cost DW1000 UWB radios. it covers the whole pipeline: firmware, ranging and channel scheduling, antenna-delay calibration, anchor self-survey, localisation, filtering and validation. two tags on a fixed 0.55 m baseline give the robot its heading as well as its position, through a rigid-body moving-horizon estimator. tested on a rocker–bogie rover in a 5 × 7 m arena with five anchors, against overhead-camera ground truth: 94 mm static error and 184 mm median error across 18 driven runs, better than per-tag kalman filtering on the same data.',
+    note: 'research internship at the centre for mechatronics, IIT Kanpur (NPTEL-sponsored), under prof. ashish dutta with adersh m. submitted to IEEE Robotics and Automation Practice.',
+    facts: [['where', 'centre for mechatronics, IIT Kanpur'], ['role', 'first author'], ['with', 'adersh m · prof. ashish dutta'], ['status', 'submitted to IEEE RA-P · open source']],
+    video: 'dune', extras: ['dune-1.jpg', 'dune-2.jpg', 'dune-3.jpg', 'dune-4.jpg', 'iitk-intern.jpg'], page: true },
+
+  { id: 'drone-rover', year: '2026 –', title: 'drone–rover navigation', line: 'GPS-denied cooperative autonomy',
+    say: 'a drone that places radio anchors so a rover on the ground can find itself to within ten centimetres.',
+    body: 'a four-phase cooperative architecture. the drone autonomously deploys UWB anchors; the rover then localises against them at centimetre level. an EKF on an ESP32 fuses UWB, optical flow and IMU, and a MAVLink/ROS2 bridge carries drone–rover communication. sub-10 cm localisation on live hardware.',
+    note: 'STARC lab, IIT Indore, under prof. abhirup datta. i lead it. first-author oral presentation at NSSS 2026 (ISRO-sponsored), one of 40 students selected nationwide. still in progress.',
+    facts: [['where', 'STARC lab, IIT Indore'], ['role', 'project lead'], ['supervisor', 'prof. abhirup datta'], ['status', 'in progress · presented at NSSS 2026']],
+    video: 'drone-rover', img: 'drone-rover.jpg', caption: 'the UWB node casing, in fusion 360.', page: true },
+
+  { id: 'cobot', year: 'jan–feb 2026', title: 'collaborative robot', line: 'voice and glove control',
+    say: 'a robot arm you can ask to pick things up, or steer with a sensor glove.',
+    body: 'two ways to drive an addverb syncro 5 six-axis cobot. say “pick up the red bottle” and an LLM extracts the intent, a depth camera sweeps the workspace, YOLO visual servoing centres the target, and the arm grasps it. or wear an ESP32 sensor glove and drive it by hand — seven gestures, classified online at ~20 Hz.',
+    note: 'tinkerers’ lab, IIT Indore. team of eight. featured on addverb technologies’ official blog.',
+    facts: [['where', 'tinkerers’ lab, IIT Indore'], ['team', 'eight'], ['recognition', 'featured on addverb’s blog']],
+    video: 'cobot', extras: ['cobot-1.jpg', 'cobot-2.jpg', 'cobot-3.jpg', 'cobot-4.jpg'], page: true },
+
+  { id: 'cement-3d-printer', year: 'jan–may 2026', title: 'cement 3d printer', line: 'large-format, cartesian',
+    say: 'a 3d printer a metre wide that prints with cement.',
+    body: '1000 × 1000 × 600 mm build volume. SFU1605 ball-screw X/Y, C-beam Z, hopper-auger extrusion, NEMA 23 steppers, arduino mega + RAMPS 1.4. sourcing, fusion 360 CAD and integration, end to end.',
+    note: 'sold to, and now in use in, a research lab.',
+    facts: [['role', 'design & assembly lead'], ['build volume', '1000 × 1000 × 600 mm'], ['status', 'sold · in use in a research lab']],
+    video: 'cement-3d-printer', page: true },
+
+  { id: 'teng-condition-monitoring', year: '2025–26', title: 'self-powered fault detection', line: 'TENG sensing + STL–CNN–LSTM',
+    say: 'self-powered sensors that listen to a machine and notice when something is going wrong.',
+    body: 'fault detection for rotating machinery using triboelectric nanogenerators as self-powered vibration sensors, streamed over an ESP32-C3. STL decomposition across seven fault classes, a 1D-CNN for features and an LSTM over time reach 98.57% accuracy — ahead of oscilloscope (97.31%) and accelerometer (95.83%) baselines.',
+    note: 'instrumentation & control lab, IIT Indore, under prof. i.a. palani.',
+    facts: [['where', 'instrumentation & control lab, IIT Indore'], ['supervisor', 'prof. i.a. palani'], ['accuracy', '98.57% across 7 fault classes']],
+    video: 'teng-condition-monitoring', page: true },
+
+  { id: 'ball-balancing-bot', year: '2026', title: 'ball balancing bot', line: 'a stewart platform that will not let a ball fall off',
+    say: 'a tilting plate that watches a ball and keeps it from rolling off.',
+    body: 'a 3RRS parallel manipulator. an overhead pi cam finds the ball, a PID controller works out the tilt to correct it, inverse kinematics turns that into three servo angles, and the loop repeats fast enough that the ball never gets away.',
+    note: 'AA216 flight mechanics & classical control, IIT Indore. group of five.',
+    facts: [['course', 'AA216, IIT Indore'], ['team', 'five']],
+    video: 'ball-balancing-bot', img: 'ball-balancing-bot.jpg', badVideo: true,
+    deck: { href: '/docs/ball-balancing-bot.pdf', label: 'the course deck' }, page: true },
+
+  { id: 'aqualoop', year: '2025–26', title: 'aqualoop', line: 'in-pipe water monitoring and recycling',
+    say: 'it sits between two pipes, checks the water going through, and works out what can be reused.',
+    body: 'a module that fits between two pipes and powers itself from the water running through it with a micro-hydro turbine. pH, TDS and turbidity sensors produce a live water quality score; at the outlet, diverter valves split used water into a recycling tank or the septic line instead of treating it all as one waste stream.',
+    note: 'team lead, team of five. second place at the vishwakarma awards 2026 (maker bhavan foundation), among 1,054 teams.',
+    facts: [['role', 'team lead'], ['team', 'five'], ['award', '2nd of 1,054 teams · vishwakarma awards 2026']],
+    video: 'aqualoop', extras: ['aqualoop-1.jpg', 'aqualoop-2.jpg', 'vishwakarma-award.jpg'], page: true },
+
+  { id: 'wind-tunnel', year: 'nov 2025', title: 'low-speed wind tunnel', line: 'with LED-based PIV',
+    say: 'a tabletop wind tunnel, and a cheap way to actually see the air move.',
+    body: 'a low-cost wind tunnel with a transparent acrylic test section, a 3D-printed contraction and diffuser, and a vacuum cleaner for suction. we had no laser for PIV, so an 84-LED strip focused through a slit stands in for the laser sheet, and OpenCV optical flow turns incense-smoke video into velocity fields.',
+    note: 'optics course project, IIT Indore. team of five.',
+    facts: [['course', 'optics, IIT Indore'], ['team', 'five']],
+    video: 'wind-tunnel', page: true },
+
+  { id: 'eternal', year: 'oct–dec 2025', title: 'eternal', line: 'warehouse inventory robot',
+    say: 'a robot that drives through a warehouse and reads every QR code on the shelves.',
+    body: 'a jetson orin nano AMR: ROS2/Nav2, RPLidar SLAM, AMCL localisation and four-channel ultrasonic obstacle avoidance. a belt-driven Z-axis scans shelves from 200 to 1800 mm and reads every QR code, with a LoRa wireless e-stop and a hot-swappable battery.',
+    note: 'hardware & design lead. bronze medal at inter IIT tech meet 14.0, IIT Patna, among all IITs.',
+    facts: [['role', 'hardware & design lead'], ['event', 'inter IIT tech meet 14.0'], ['award', 'bronze medal']],
+    video: 'eternal', extras: ['inter-iit-award.jpg', 'inter-iit-award-1.jpg'], page: true },
+
+  { id: 'mms', year: 'aug 2025 –', title: 'machine management system', line: 'RFID access control for lab machines',
+    say: 'tap a card to switch on a lab machine. it runs five machines in the tinkerers’ lab.',
+    body: 'access control across five lab machines: ESP32 + MFRC522 RFID nodes with relay actuation, an automated card dispenser, a raspberry pi 5 issuing station, and a firebase backend with a live dashboard.',
+    note: 'project lead, team of two. running in the tinkerers’ lab, IIT Indore. IITISoC gold (robotics) and the grand innovation & best maker awards at IAMS 2025. patent in progress.',
+    facts: [['role', 'project lead'], ['team', 'two'], ['status', 'in daily use · patent in progress'], ['awards', 'IITISoC gold · IAMS 2025 best maker']],
+    video: 'mms', extras: ['iams-award.jpg', 'iitisoc-award.jpg'], page: true },
+
+  { id: 'esp32-flight-controller', year: 'may–aug 2025', title: 'custom esp32 flight controller', line: 'STARC lab',
+    say: 'a flight controller board i designed that holds a drone steady without GPS.',
+    body: 'a flight-controller PCB with an MPU6050 IMU, magnetometer and optical flow sensor. EKF sensor fusion holds a 25-minute stable hover without GPS.',
+    note: 'research internship, STARC lab, IIT Indore, under prof. abhirup datta.',
+    facts: [['where', 'STARC lab, IIT Indore'], ['supervisor', 'prof. abhirup datta'], ['result', '25-min hover, no GPS']],
+    video: 'esp32-flight-controller', extras: ['esp32-flight-controller-1.jpg', 'esp32-flight-controller-2.jpg'], badVideo: true, page: true },
+
+  { id: 'patrolling-bot', year: '2025', title: 'line follower → patrolling bot', line: 'first-year makerspace',
+    quote: 'the course asked for a line follower. we had to add one feature of our own.',
+    say: 'a line follower that also streams video, and spins on the spot when you press SOS.',
+    body: 'a line-following robot on a raspberry pi 4 that streams live camera footage back to a PC. an SOS button notifies the control centre and puts the bot into a 360° rotation so it can be found.',
+    note: 'first-year makerspace course project, IIT Indore.',
+    facts: [['course', 'makerspace, IIT Indore']],
+    video: 'patrolling-bot', extras: ['patrolling-bot-1.jpg', 'patrolling-bot-2.jpg', 'patrolling-bot-3.jpg'], page: true },
+
+  { id: 'iroc-drone', year: 'jan–aug 2025', title: 'nogps autonomous drone', line: 'ISRO robotics challenge',
+    say: 'a drone that takes off, hovers and lands by itself, built for a mars-like arena.',
+    body: 'an autonomous drone for the ISRO robotics challenge: pixhawk flight control, a raspberry pi on board, and a RealSense depth camera on a gimbal that maps the ground on the way up and looks for obstacles once it’s hovering.',
+    note: 'IRoC-U 2025, team MarsXplorers, six of us. there is a folder in my archive named “fails”. it has six videos in it.',
+    facts: [['event', 'IRoC-U 2025'], ['team', 'six'], ['mentors', 'prof. abhirup datta · prof. i.a. palani']],
+    video: 'iroc-drone', extras: ['iroc-drone-1.jpg', 'iroc-drone-2.jpg', 'iroc-drone-3.jpg'], page: true },
+
+  { id: 'morphobot', year: '2025', title: 'morphobot', line: 'a drone that lands and drives away',
+    quote: 'flying is expensive. if the ground is drivable, don’t fly.',
+    say: 'a drone that lands, folds its arms down and drives away on them.',
+    body: 'a vehicle that flies to a site, lands, folds its rotor arms down and drives on the rotor guards as wheels — then reaches into rubble with a 4-axis arm actuated by shape memory alloy and steered by hand gestures. built for disaster response.',
+    note: 'two prototypes. mechatronics & instrumentation lab, IIT Indore, under prof. i.a. palani. with soham mondal and tejal uplenchwar.',
+    facts: [['where', 'mechatronics lab, IIT Indore'], ['with', 'soham mondal · tejal uplenchwar'], ['prototypes', 'two']],
+    video: 'morphobot', extras: ['morphobot-1.jpg', 'morphobot-2.jpg'], badVideo: true, page: true },
+
+  { id: 'micromouse', year: '2024–25', title: 'micromouse', line: 'a maze-solving robot',
+    say: 'a small robot that finds its own way through a maze.',
+    body: 'a small robot that finds its way through a maze.',
+    img: 'micromouse.jpg', extras: ['micromouse-1.jpg'] },
+
+  { id: 'alzheimers-shoes', year: '2025', title: 'gait-analysis shoes', line: 'for early alzheimer’s detection · stopped',
+    say: 'shoes with sensors that watch how you walk. i stopped this one.',
+    body: 'a wearable shoe with TENG sensors in the sole, to pick up gait abnormalities that could be an early sign of alzheimer’s.',
+    note: 'i stopped for three reasons: my own expertise ceiling at the time, TENG not showing promise, and training data that would have needed hospital access to patients.',
+    video: 'alzheimers-shoes', page: true },
+
+  { id: 'gps-shoes', year: '2025', title: 'power-harvesting army boots', line: 'TENG energy harvesting · DRDO',
+    say: 'army boots that make their own electricity while you walk. i worked on the circuit that stores it.',
+    body: 'a DRDO-funded lab project (2021–24) built an army boot that generates its own electricity from walking: a laser-textured triboelectric nanogenerator in the sole, rectified and stored to run GPS and RFID. ten pairs went to ARDE, Pune. i joined the lab in march 2025 and designed the impedance-matching circuit, bringing source impedance from 885 MΩ to 88.4 MΩ and improving battery charging efficiency by 54%. patent filed.',
+    note: 'instrumentation & control lab, IIT Indore, under prof. i.a. palani. my first project in the lab.',
+    facts: [['where', 'instrumentation & control lab, IIT Indore'], ['my part', 'impedance-matching circuit, +54% charging efficiency'], ['status', 'patent filed']],
+    img: 'gps-shoes.jpg', extras: ['gps-shoes-1.jpg', 'gps-shoes-2.jpg'], page: true },
+];
+
+export const all = [...work, ...early];
+export const byId = Object.fromEntries(all.map((p) => [p.id, p]));
+
+export const M = '/media/projects/';
+export const still = (p: Project) => p.img || p.extras?.[0] || '';
+
+export interface MediaItem { kind: 'video' | 'image'; src: string; poster?: string }
+
+export function mediaOf(p: Project): MediaItem[] {
+  const out: MediaItem[] = [];
+  const v: MediaItem | null = p.video
+    ? { kind: 'video', src: `${M}${p.video}.mp4`, poster: `${M}${p.video}.jpg` }
+    : null;
+  if (v && !p.badVideo) out.push(v);
+  if (p.img) out.push({ kind: 'image', src: M + p.img });
+  (p.extras || []).forEach((f) => out.push({ kind: 'image', src: M + f }));
+  if (v && p.badVideo) out.push(v);
+  return out;
+}

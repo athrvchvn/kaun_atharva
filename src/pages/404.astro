@@ -2,31 +2,21 @@
 import Base from '../layouts/Base.astro';
 ---
 
-<Base title="not here — kaun atharva?" description="This page does not exist.">
-  <main id="main" class="wrap nf">
-    <p class="mono">404</p>
-    <h1 class="display">this one doesn&rsquo;t exist</h1>
-    <p class="lead dim">
-      which, in a decade of building things, has happened before.
-    </p>
-    <ul class="links">
-      <li><a href="/">the story</a></li>
-      <li><a href="/work">the work</a></li>
-    </ul>
+<Base title="not here — atharva chavan" description="This page does not exist.">
+  <main id="main" class="nf">
+    <p class="code">404</p>
+    <h1>this one doesn’t exist.</h1>
+    <p class="sub">which, in a decade of building things, has happened before.</p>
+    <div class="pills">
+      <a class="pill" href="/">home</a>
+      <a class="pill" href="/work">projects</a>
+    </div>
   </main>
 </Base>
 
 <style>
-  .nf {
-    min-height: 78svh;
-    display: grid;
-    align-content: center;
-    gap: 1.1rem;
-    padding-block: 6rem;
-  }
-  .nf .mono { color: var(--brass); }
-  .nf h1 { font-size: var(--t-act); }
-  .links { list-style: none; padding: 0; margin-top: 1.5rem; display: flex; gap: 2rem; }
-  .links a { border-bottom: 1px solid var(--hairline-2); padding-bottom: 2px; }
-  .links a:hover { color: var(--brass); border-color: var(--brass); }
+  .nf { min-height: 78vh; display: grid; align-content: center; justify-items: center; text-align: center; gap: 14px; padding: 80px 24px; background: var(--bg2); }
+  .code { margin: 0; font-size: 17px; font-weight: 600; color: var(--ink2); }
+  h1 { margin: 0; font-size: clamp(40px, 6vw, 72px); line-height: 1.02; font-weight: 700; letter-spacing: -0.04em; }
+  .sub { margin: 0 0 16px; font-size: 21px; color: var(--ink2); }
 </style>
