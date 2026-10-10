@@ -40,7 +40,7 @@ Two of the problems are worth writing down, because neither one shows up until y
 
 The work did not stop when the drone did. Needing a flight stack I could understand all the way
 down led to the **custom ESP32 flight controller**, which later held a 25-minute hover without
-GPS. The GPS-denied navigation problem became **DUNE**, and then the **drone–rover** system.
+GPS. The GPS-denied navigation problem became **DUNE**.
 
 ## The team
 

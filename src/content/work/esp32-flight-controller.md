@@ -20,8 +20,5 @@ for it.
 
 A **25-minute stable hover in GPS-denied conditions**.
 
-The same EKF approach — IMU and optical flow, later with UWB ranges added — is what runs on the
-drone in the drone–rover project.
-
 Built during my research internship at the **STARC Lab, IIT Indore** (May–August 2025), under
 Prof. Abhirup Datta.

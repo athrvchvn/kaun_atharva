@@ -63,13 +63,6 @@ export const work: Project[] = [
     facts: [['where', 'centre for mechatronics, IIT Kanpur'], ['role', 'first author'], ['with', 'adersh m · prof. ashish dutta'], ['status', 'submitted to IEEE RA-P · open source']],
     video: 'dune', extras: ['dune-1.jpg', 'dune-2.jpg', 'dune-3.jpg', 'dune-4.jpg', 'iitk-intern.jpg'], page: true },
 
-  { id: 'drone-rover', year: '2026 –', title: 'drone–rover navigation', line: 'GPS-denied cooperative autonomy',
-    say: 'a drone that places radio anchors so a rover on the ground can find itself to within ten centimetres.',
-    body: 'a four-phase cooperative architecture. the drone autonomously deploys UWB anchors; the rover then localises against them at centimetre level. an EKF on an ESP32 fuses UWB, optical flow and IMU, and a MAVLink/ROS2 bridge carries drone–rover communication. sub-10 cm localisation on live hardware.',
-    note: 'STARC lab, IIT Indore, under prof. abhirup datta. i lead it. first-author oral presentation at NSSS 2026 (ISRO-sponsored), one of 40 students selected nationwide. still in progress.',
-    facts: [['where', 'STARC lab, IIT Indore'], ['role', 'project lead'], ['supervisor', 'prof. abhirup datta'], ['status', 'in progress · presented at NSSS 2026']],
-    video: 'drone-rover', img: 'drone-rover.jpg', caption: 'the UWB node casing, in fusion 360.', page: true },
-
   { id: 'cobot', year: 'jan–feb 2026', title: 'collaborative robot', line: 'voice and glove control',
     say: 'a robot arm you can ask to pick things up, or steer with a sensor glove.',
     body: 'two ways to drive an addverb syncro 5 six-axis cobot. say “pick up the red bottle” and an LLM extracts the intent, a depth camera sweeps the workspace, YOLO visual servoing centres the target, and the arm grasps it. or wear an ESP32 sensor glove and drive it by hand — seven gestures, classified online at ~20 Hz.',
