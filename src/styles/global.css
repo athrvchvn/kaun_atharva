@@ -5,12 +5,18 @@
   --ease: cubic-bezier(.2, .7, .2, 1);
   color-scheme: light;
 }
+/* Dark follows the system unless the visitor picked a theme with the toggle. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #000; --bg2: #101012; --card: #1c1c1e; --ink: #f5f5f7; --ink2: #a1a1a6;
     --line: #38383a; --link: #2997ff; --chip: #2c2c2e; --nav: rgba(22, 22, 23, .72);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+    --bg: #000; --bg2: #101012; --card: #1c1c1e; --ink: #f5f5f7; --ink2: #a1a1a6;
+    --line: #38383a; --link: #2997ff; --chip: #2c2c2e; --nav: rgba(22, 22, 23, .72);
+    color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -37,8 +43,20 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--link); outline-
 }
 .nav-in { max-width: 1024px; margin: 0 auto; padding: 0 22px; height: 48px; display: flex; align-items: center; gap: 28px; }
 .nav-in .brand { font-size: 15px; font-weight: 600; color: var(--ink); margin-right: auto; white-space: nowrap; }
-.nav-in a:not(.brand) { font-size: 13px; color: var(--ink); opacity: .8; }
-@media (max-width: 420px) { .nav-in { gap: 18px; } }
+.nav-in a:not(.brand) { font-size: 13px; color: var(--ink); opacity: .8; white-space: nowrap; }
+@media (max-width: 420px) { .nav-in { gap: 14px; padding: 0 16px; } .nav-in .brand { font-size: 14px; } }
+
+/* theme toggle */
+.theme { border: 0; padding: 0; margin: 0 -6px 0 -8px; width: 32px; height: 32px; border-radius: 50%; background: none; color: var(--ink); opacity: .8; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.theme:hover { opacity: 1; background: var(--chip); }
+.theme svg { width: 17px; height: 17px; }
+.theme .moon { display: none; }
+:root[data-theme="dark"] .theme .sun { display: none; }
+:root[data-theme="dark"] .theme .moon { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme .sun { display: none; }
+  :root:not([data-theme="light"]) .theme .moon { display: block; }
+}
 
 /* footer */
 .foot { background: var(--bg2); border-top: 1px solid var(--line); }

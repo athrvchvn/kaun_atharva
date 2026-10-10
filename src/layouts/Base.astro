@@ -36,6 +36,10 @@ const ogImage = new URL(image, site);
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline>
+      // Apply a saved theme before first paint, so there is no flash.
+      try { var t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+    </script>
+    <script is:inline>
       // Reveal-on-scroll. Only hides content when the observer exists, so
       // nothing stays invisible without JS.
       (function () {
@@ -60,8 +64,29 @@ const ogImage = new URL(image, site);
         <a href="/#work">projects</a>
         <a href="/#story">first ones</a>
         <a href="/#contact">contact</a>
+        <button class="theme" id="theme" type="button" aria-label="switch to dark mode">
+          <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+        </button>
       </div>
     </nav>
+
+    <script is:inline>
+      (function () {
+        var b = document.getElementById('theme'), d = document.documentElement;
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        var cur = function () { return d.getAttribute('data-theme') || (mq.matches ? 'dark' : 'light'); };
+        var label = function () { b.setAttribute('aria-label', cur() === 'dark' ? 'switch to light mode' : 'switch to dark mode'); };
+        label();
+        b.addEventListener('click', function () {
+          var next = cur() === 'dark' ? 'light' : 'dark';
+          d.setAttribute('data-theme', next);
+          try { localStorage.setItem('theme', next); } catch (e) {}
+          label();
+        });
+        mq.addEventListener && mq.addEventListener('change', label);
+      })();
+    </script>
 
     <slot />
 
